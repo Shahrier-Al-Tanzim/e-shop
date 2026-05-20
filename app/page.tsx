@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
+import { useSession, signOut } from "next-auth/react";
 
 interface Product {
   id: string;
@@ -20,6 +22,9 @@ interface Message {
 }
 
 export default function Home() {
+  const { data: session, status } = useSession();
+  const isLoggedIn = status === "authenticated";
+
   // UI Interactive States
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<Message[]>([
@@ -178,13 +183,45 @@ export default function Home() {
               )}
             </button>
             
-            <a 
-              href="/admin" 
-              className="hidden sm:inline-flex text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg transition-colors border border-indigo-500/30"
-              onClick={(e) => { e.preventDefault(); alert("Admin panel routes will be enabled in Module 4 once Auth is active!"); }}
-            >
-              Admin Panel
-            </a>
+            {isLoggedIn ? (
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-zinc-400 font-medium hidden md:inline-flex items-center gap-1.5">
+                  Hi, {session?.user?.name || "Customer"} 
+                  {session?.user?.role === "ADMIN" && (
+                    <span className="text-[9px] uppercase tracking-wider bg-indigo-500/10 text-indigo-400 px-1.5 py-0.5 rounded border border-indigo-500/20 font-bold">
+                      Admin
+                    </span>
+                  )}
+                </span>
+                
+                {session?.user?.role === "ADMIN" ? (
+                  <Link 
+                    href="/admin" 
+                    className="inline-flex text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-2 rounded-lg transition-colors border border-indigo-500/30 cursor-pointer"
+                  >
+                    Admin Panel
+                  </Link>
+                ) : (
+                  <span className="text-xs font-semibold bg-zinc-900 text-zinc-400 px-3.5 py-2 rounded-lg border border-zinc-800">
+                    Customer
+                  </span>
+                )}
+
+                <button 
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="text-xs text-zinc-400 hover:text-red-400 transition-colors cursor-pointer px-2 py-2"
+                >
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <Link 
+                href="/login" 
+                className="inline-flex text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg transition-colors border border-indigo-500/30 cursor-pointer"
+              >
+                Sign In
+              </Link>
+            )}
           </div>
         </div>
       </nav>
