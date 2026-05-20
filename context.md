@@ -8,7 +8,7 @@ This file is the living context ledger for our E-Shop project. Every time we imp
 An industry-grade, highly robust, and Vercel-ready e-commerce platform built with Next.js 14+ (App Router), React 19, Tailwind CSS v4, Neon PostgreSQL, Prisma ORM, Auth.js (NextAuth v5), Cloudinary, Stripe, and an advanced AI Support Assistant.
 
 - **Current Repository Path**: `c:\Projects\e-shop`
-- **Active Git Branch**: `module-1-foundation`
+- **Active Git Branch**: `module-2-database`
 
 ---
 
@@ -17,7 +17,7 @@ An industry-grade, highly robust, and Vercel-ready e-commerce platform built wit
 | Module | Description | Status |
 | :--- | :--- | :--- |
 | **Module 1** | Next.js Foundation, CSS Design System, & Homepage Shell | **Completed** ✅ |
-| **Module 2** | Database Setup & Prisma ORM Schema | *Pending* ⏳ |
+| **Module 2** | Database Setup & Prisma ORM Schema | **Completed** ✅ |
 | **Module 3** | Authentication & Edge Route Guards (NextAuth) | *Pending* ⏳ |
 | **Module 4** | Admin Dashboard & Cloudinary Product CRUD | *Pending* ⏳ |
 | **Module 5** | Public Product Catalog & ISR Page Caching | *Pending* ⏳ |
@@ -61,6 +61,28 @@ An industry-grade, highly robust, and Vercel-ready e-commerce platform built wit
   2. Timezone-sensitive dynamic pre-renders were resolved by converting the initial chat message dynamic time constructor to a static string (`"03:00 AM"`), keeping date calculations localized to client-side user events.
 - **Files modified**: `app/layout.tsx`, `app/page.tsx`
 
+### Step 7: Switched to Database Development Branch
+- **What was done**: Created and checked out a dedicated `module-2-database` branch to isolate database and ORM tasks.
+- **Commands used**: `git checkout -b module-2-database`
+
+### Step 8: Configured Prisma 7 and Driver Adapter Dependencies
+- **What was done**: Installed Prisma 7 libraries and devDependencies including `@prisma/client`, `prisma`, `tsx`, `@prisma/adapter-neon`, `@neondatabase/serverless`, `ws`, `@types/ws`, and `dotenv`.
+- **Files modified**: `package.json`
+
+### Step 9: Designed Relational Schema & Built Connection Adapter
+- **What was done**:
+  1. Designed the 5 core relational models (`User`, `Category`, `Product`, `Order`, `OrderItem`) with proper delete cascading rules in `prisma/schema.prisma`.
+  2. Formulated the dynamic env config inside `prisma.config.ts`.
+  3. Formulated the global caching `PrismaClient` adapter singleton inside `lib/prisma.ts` utilizing `ws` for secure WebSocket client queries.
+- **Files modified**: `prisma/schema.prisma`, `prisma.config.ts`, `lib/prisma.ts`
+
+### Step 10: Created Database Seed Script and Verified Build
+- **What was done**:
+  1. Authored `prisma/seed.ts` featuring seed data for role-based users, multi-tiered categories, and high-fidelity product listings.
+  2. Executed Prisma type binding generation and completed Next.js production builds under Turbopack to verify zero-error compiling.
+  3. Created specialized sub-documentation under [module-2.md](file:///c:/Projects/e-shop/docs/module-2.md).
+- **Files modified**: `prisma/seed.ts`, `docs/module-2.md`
+
 ---
 
 ## 💡 Code Mechanics & Tool Explanations
@@ -87,4 +109,14 @@ An industry-grade, highly robust, and Vercel-ready e-commerce platform built wit
 - **How it works**: Standard react state `useState` manages the open/close triggers of the drawer, user text input, and message history logs. 
   - The text handler matches keywords using simple RegExp checks (`stack`, `vercel`, `roadmap`, `cart`) to return specific answers about the e-shop stack, deployment models, and cart implementation, simulating a live LLM experience.
   - In Module 9, this exact chat component will be wired to `/api/ai/chat` using AI SDK streams (Gemini/Claude) and SQL-querying function calls to perform real product and order tracking.
+
+### 5. Prisma 7 Configuration & Database Separation
+- **How it works**: In Prisma 7, static schemas inside `schema.prisma` are decoupled from dynamic connection URLs. We created `prisma.config.ts` loading environment settings via `dotenv/config` and wrapping datasource links in the `defineConfig` block, preparing the app for both serverless and local container operations.
+
+### 6. Neon Serverless Postgres Driver Adapters
+- **How it works**: Serverless functions running at the Edge cannot easily sustain standard TCP connection pools. We resolved this by employing `@neondatabase/serverless` and `@prisma/adapter-neon`. The driver adapter converts database protocol queries over WebSockets (`ws`) instead of raw TCP, enabling rapid scaling and scale-to-zero capabilities with zero connection-count crashes.
+
+### 7. Global-caching Client Singleton Pattern
+- **How it works**: Fast hot-reload in Next.js development routinely tears down and recreates runtime modules, which leaks database connection pools. We bound the PrismaClient instance to a global variable `globalThis.prismaGlobal` to persist and share a single connection pool across hot-reloads.
+
 
