@@ -1,0 +1,90 @@
+# Project Context Ledger (`context.md`)
+
+This file is the living context ledger for our E-Shop project. Every time we implement or modify a feature, we will update this document to keep track of what is happening, the file structure, how the code works, the tools used, and the chronological steps taken.
+
+---
+
+## 🚀 Project Overview
+An industry-grade, highly robust, and Vercel-ready e-commerce platform built with Next.js 14+ (App Router), React 19, Tailwind CSS v4, Neon PostgreSQL, Prisma ORM, Auth.js (NextAuth v5), Cloudinary, Stripe, and an advanced AI Support Assistant.
+
+- **Current Repository Path**: `c:\Projects\e-shop`
+- **Active Git Branch**: `module-1-foundation`
+
+---
+
+## 🗺️ Module Roadmap & Progress
+
+| Module | Description | Status |
+| :--- | :--- | :--- |
+| **Module 1** | Next.js Foundation, CSS Design System, & Homepage Shell | **Completed** ✅ |
+| **Module 2** | Database Setup & Prisma ORM Schema | *Pending* ⏳ |
+| **Module 3** | Authentication & Edge Route Guards (NextAuth) | *Pending* ⏳ |
+| **Module 4** | Admin Dashboard & Cloudinary Product CRUD | *Pending* ⏳ |
+| **Module 5** | Public Product Catalog & ISR Page Caching | *Pending* ⏳ |
+| **Module 6** | Zustand Cart System with Slide-over Drawer | *Pending* ⏳ |
+| **Module 7** | Stripe Checkout Session & Webhook Order Fullfilment | *Pending* ⏳ |
+| **Module 8** | Order History & Administration Status Panel | *Pending* ⏳ |
+| **Module 9** | Post-launch AI Support Assistant with Function Calling | *Pending* ⏳ |
+
+---
+
+## 🛠️ Step-by-Step Chronological History
+
+### Step 1: Checked out separate development branch
+- **What was done**: Switched the repository branch from `starting` to `module-1-foundation` to isolate this module's code changes.
+- **Commands used**: `git checkout -b module-1-foundation`
+
+### Step 2: Next.js Foundation Initialization
+- **What was done**: We ran `create-next-app` in non-interactive mode. To prevent initialization errors due to the existing `project-info.md`, we temporarily moved it out to our metadata folder, ran the installer, and then moved `project-info.md` back to the root of the workspace.
+- **Commands used**:
+  - `Move-Item -Path "c:\Projects\e-shop\project-info.md" -Destination "<artifact-dir>"` (to clear workspace)
+  - `npx -y create-next-app@latest ./ --ts --tailwind --eslint --app --import-alias "@/*" --use-npm --yes`
+  - `Move-Item -Path "<artifact-dir>\project-info.md" -Destination "c:\Projects\e-shop\project-info.md"` (to restore)
+- **Results**: Scaffolded Next.js 16.2.6, React 19.2.4, and Tailwind CSS v4 in the workspace root.
+
+### Step 3: Premium Design Tokens Configuration
+- **What was done**: We replaced the contents of `app/globals.css` with custom theme declarations. We declared precise HSL slate and zinc colors, set primary and violet accent variables, declared smooth transitions, enabled keyframe animations, customized scrolling bars, and set up frosted-glass panel utility classes.
+- **Files modified**: `app/globals.css`
+
+### Step 4: High-Fidelity Front-End Shell Development
+- **What was done**: We replaced the standard `app/page.tsx` with a highly engaging client-side storefront. We mocked a product database, added functional "Add to Cart" handlers, constructed an interactive slide-over cart drawer, built visual interactive cards representing our upcoming modules, and built a fully functional simulated AI Support Assistant that answers questions about the tech stack, deployment, and future database seeding.
+- **Files modified**: `app/page.tsx`
+
+### Step 5: Successful Compilation & Build Verification
+- **What was done**: We ran Next.js production build checks to ensure that TypeScript types, ESLint rules, and CSS configurations compile seamlessly on Turbopack without a single warning or error.
+- **Commands used**: `npm run build`
+- **Results**: Compiled in 2.6 seconds, producing statically optimized prerendered routes (`/` and `/_not-found`).
+
+### Step 6: Resolved Server-Client React Hydration Discrepancies
+- **What was done**: Fixed two classic React hydration mismatches:
+  1. Injected extension attributes (`bis_register`, `__processed...__`) on `<body>` were solved by appending `suppressHydrationWarning` to the `<html>` and `<body>` tags.
+  2. Timezone-sensitive dynamic pre-renders were resolved by converting the initial chat message dynamic time constructor to a static string (`"03:00 AM"`), keeping date calculations localized to client-side user events.
+- **Files modified**: `app/layout.tsx`, `app/page.tsx`
+
+---
+
+## 💡 Code Mechanics & Tool Explanations
+
+### 1. Next.js 16 (App Router) & React 19
+- **How it works**: Uses the modern directory layout under `/app` where directories define URLs and `page.tsx` represents the view. Layouts (`layout.tsx`) wrap children in their sub-trees.
+- **Special tools used**: 
+  - `create-next-app`: The official boilerplate generator from the Next.js team. It sets up standard configurations, Babel/SWC compiler settings, TypeScript `tsconfig.json`, ESLint rules, and PostCSS.
+  - `npx`: Node Package Runner. Running `npx -y create-next-app@latest` allows executing the latest CLI tool directly without globally installing it.
+
+### 2. Tailwind CSS v4 (CSS-first Engine)
+- **How it works**: Unlike older versions of Tailwind (v3 and below), **Tailwind v4 does not use a `tailwind.config.js` or `tailwind.config.ts`** file! It uses a brand-new, CSS-first architecture. 
+- **Configuration Details**: 
+  - All Tailwind configurations, including theme extensions, are written directly inside the `app/globals.css` file using standard CSS rules and the `@theme` directive.
+  - The build process is powered by the `@tailwindcss/postcss` plugin specified in `postcss.config.mjs`, which automatically compiles utility classes inside your JS/TSX components on the fly during development and builds.
+  - The `@import "tailwindcss";` directive replaces the old `@tailwind base; @tailwind components; @tailwind utilities;` syntax.
+
+### 3. Premium HSL Token Colors & Glassmorphism
+- **How it works**: We set color tokens using standard CSS variables under `:root` and registered them using the `@theme` block in Tailwind v4. Under the hood:
+  - `.glass-panel` utilizes a semi-transparent dark zinc color `rgba(24,24,27,0.6)` combined with a background filter `backdrop-filter: blur(12px)` and a subtle semi-transparent border, creating an ultra-premium frosted-glass appearance that responds to our background neon glow gradients.
+  - Custom scrollbars are styled to blend seamlessly with the dark backdrop, eliminating jarring default browser scrolling bars.
+
+### 4. Interactive simulated AI Chat Assistant
+- **How it works**: Standard react state `useState` manages the open/close triggers of the drawer, user text input, and message history logs. 
+  - The text handler matches keywords using simple RegExp checks (`stack`, `vercel`, `roadmap`, `cart`) to return specific answers about the e-shop stack, deployment models, and cart implementation, simulating a live LLM experience.
+  - In Module 9, this exact chat component will be wired to `/api/ai/chat` using AI SDK streams (Gemini/Claude) and SQL-querying function calls to perform real product and order tracking.
+
