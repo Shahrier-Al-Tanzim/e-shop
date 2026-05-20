@@ -8,7 +8,7 @@ This file is the living context ledger for our E-Shop project. Every time we imp
 An industry-grade, highly robust, and Vercel-ready e-commerce platform built with Next.js 14+ (App Router), React 19, Tailwind CSS v4, Neon PostgreSQL, Prisma ORM, Auth.js (NextAuth v5), Cloudinary, Stripe, and an advanced AI Support Assistant.
 
 - **Current Repository Path**: `c:\Projects\e-shop`
-- **Active Git Branch**: `module-2-database`
+- **Active Git Branch**: `module-3-auth`
 
 ---
 
@@ -18,7 +18,7 @@ An industry-grade, highly robust, and Vercel-ready e-commerce platform built wit
 | :--- | :--- | :--- |
 | **Module 1** | Next.js Foundation, CSS Design System, & Homepage Shell | **Completed** ✅ |
 | **Module 2** | Database Setup & Prisma ORM Schema | **Completed** ✅ |
-| **Module 3** | Authentication & Edge Route Guards (NextAuth) | *Pending* ⏳ |
+| **Module 3** | Authentication & Edge Route Guards (NextAuth) | **Completed** ✅ |
 | **Module 4** | Admin Dashboard & Cloudinary Product CRUD | *Pending* ⏳ |
 | **Module 5** | Public Product Catalog & ISR Page Caching | *Pending* ⏳ |
 | **Module 6** | Zustand Cart System with Slide-over Drawer | *Pending* ⏳ |
@@ -83,6 +83,31 @@ An industry-grade, highly robust, and Vercel-ready e-commerce platform built wit
   3. Created specialized sub-documentation under [module-2.md](file:///c:/Projects/e-shop/docs/module-2.md).
 - **Files modified**: `prisma/seed.ts`, `docs/module-2.md`
 
+### Step 11: Switched to Authentication Development Branch
+- **What was done**: Created and checked out a dedicated `module-3-auth` branch to isolate authentication work.
+- **Commands used**: `git checkout -b module-3-auth`
+
+### Step 12: Installed Auth & Cryptography Dependencies
+- **What was done**: Installed `next-auth@beta`, `@auth/prisma-adapter`, `bcryptjs` (runtime) and `@types/bcryptjs` (devDependency). Chose `bcryptjs` (pure JS) over compiled `bcrypt` for edge compatibility.
+- **Files modified**: `package.json`, `package-lock.json`
+
+### Step 13: Implemented Complete Auth Layer & UI
+- **What was done**:
+  1. Created `auth.config.ts` with edge-compatible authorized callback, JWT/session role expansion, and custom login page.
+  2. Created `auth.ts` connecting `PrismaAdapter` with Credentials provider and `bcryptjs` password comparison.
+  3. Added TypeScript augmentation in `types/next-auth.d.ts` for `role` and `id` on session/JWT.
+  4. Created `app/api/auth/[...nextauth]/route.ts` for NextAuth REST endpoints.
+  5. Created `app/actions/auth.ts` with `registerUser` and `loginUser` Server Actions.
+  6. Created premium glassmorphic `/login` and `/register` pages.
+  7. Wrapped root `app/layout.tsx` in `SessionProvider`.
+  8. Integrated dynamic session state into storefront navbar (greeting, role badge, sign-out, admin link).
+  9. Added `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` to `.env` and `.env.example`.
+- **Files modified**: `auth.config.ts`, `auth.ts`, `types/next-auth.d.ts`, `app/api/auth/[...nextauth]/route.ts`, `app/actions/auth.ts`, `app/login/page.tsx`, `app/register/page.tsx`, `app/layout.tsx`, `app/page.tsx`, `.env`, `.env.example`
+
+### Step 14: Migrated middleware.ts → proxy.ts & Build Verified
+- **What was done**: Next.js 16 deprecated the `middleware.ts` file convention in favor of `proxy.ts`. Deleted `middleware.ts` and created `proxy.ts` at the root with identical NextAuth route guard logic. Ran `npm run build` — compiled successfully in 4.9s with zero errors, proxy recognised as `ƒ Proxy (Middleware)`, all 6 routes prerendered.
+- **Files modified**: `proxy.ts` (new), `middleware.ts` (deleted), `docs/module-3.md` (new)
+
 ---
 
 ## 💡 Code Mechanics & Tool Explanations
@@ -119,4 +144,12 @@ An industry-grade, highly robust, and Vercel-ready e-commerce platform built wit
 ### 7. Global-caching Client Singleton Pattern
 - **How it works**: Fast hot-reload in Next.js development routinely tears down and recreates runtime modules, which leaks database connection pools. We bound the PrismaClient instance to a global variable `globalThis.prismaGlobal` to persist and share a single connection pool across hot-reloads.
 
+### 8. Auth.js v5 (NextAuth) — Decoupled Edge Architecture
+- **How it works**: Auth.js v5 uses a split-config pattern. `auth.config.ts` holds edge-safe callback definitions (no DB drivers), while `auth.ts` hydrates the full configuration with database adapters. This split is critical because the proxy interceptor runs in the Edge Runtime where Node.js native modules (like TCP database drivers) are unavailable.
+- **Key exports from `auth.ts`**: `auth` (session reader), `signIn`, `signOut`, `handlers` (GET/POST for API route).
+- **Credentials flow**: User submits email/password → `signIn("credentials", ...)` → `authorize()` in `auth.ts` queries Prisma for the user → `bcryptjs.compare()` verifies password → JWT token issued with `role` and `id` claims.
+
+### 9. Next.js 16 Proxy Convention (formerly Middleware)
+- **How it works**: Next.js 16 renamed the `middleware.ts` file convention to `proxy.ts`. Both serve identical purposes — running server-side code before a request completes — but using `middleware.ts` now triggers a deprecation warning. Only one `proxy.ts` file is allowed per project, placed at the workspace root.
+- **Our implementation**: `proxy.ts` exports `NextAuth(authConfig).auth` and a matcher config, intercepting all non-API, non-static routes to enforce authentication and role checks.
 
