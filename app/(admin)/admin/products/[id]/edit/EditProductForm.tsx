@@ -38,7 +38,25 @@ export default function EditProductForm({ product, categories }: Props) {
   const [description, setDescription] = useState(product.description);
   const [categoryId, setCategoryId] = useState(product.categoryId);
   const [image, setImage] = useState(product.images[0] || "");
+  const [useUpload, setUseUpload] = useState(
+    !product.images[0] || product.images[0].startsWith("data:image") || product.images[0].startsWith("http")
+  );
   const [isActive, setIsActive] = useState(product.isActive);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 4 * 1024 * 1024) {
+        setError("File size is too large! Maximum limit is 4MB.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,19 +173,63 @@ export default function EditProductForm({ product, categories }: Props) {
         </div>
 
         {/* Image / Emoji */}
-        <div>
-          <label htmlFor="edit-image" className="block text-[10px] uppercase font-bold tracking-widest text-zinc-500 mb-2">
-            Thumbnail Image / Emoji
+        <div className="flex flex-col justify-end">
+          <label className="block text-[10px] uppercase font-bold tracking-widest text-zinc-500 mb-2">
+            {useUpload ? "Thumbnail Image Photo *" : "Thumbnail Image Emoji / URL *"}
           </label>
-          <input
-            id="edit-image"
-            type="text"
-            value={image}
-            onChange={(e) => setImage(e.target.value)}
-            placeholder="e.g. ⌚ or standard URL link"
-            disabled={isPending}
-            className="w-full bg-zinc-950 border border-zinc-800 text-sm rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors disabled:opacity-50"
-          />
+          
+          {useUpload ? (
+            <div className="w-full bg-zinc-950 border-2 border-dashed border-zinc-800 rounded-xl p-4 flex flex-col items-center justify-center text-center hover:border-indigo-500/40 transition-colors cursor-pointer relative min-h-[92px]">
+              {image && (image.startsWith("data:image") || image.startsWith("http")) ? (
+                <div className="relative group w-full flex items-center justify-center overflow-hidden py-1">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={image} alt="Uploaded product preview" className="max-h-[72px] rounded-lg object-contain" />
+                  <button
+                    type="button"
+                    onClick={() => setImage("")}
+                    className="absolute top-0 right-0 bg-red-950/80 hover:bg-red-900 border border-red-900/60 text-red-400 text-[8px] font-bold px-1.5 py-0.5 rounded cursor-pointer transition-colors"
+                  >
+                    ✕ Remove
+                  </button>
+                </div>
+              ) : (
+                <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer py-1">
+                  <span className="text-xl mb-0.5">📷</span>
+                  <span className="text-[11px] font-bold text-zinc-300">Choose Product Photo</span>
+                  <span className="text-[9px] text-zinc-500 mt-0.5">PNG, JPG, or WEBP up to 4MB</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    disabled={isPending}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
+          ) : (
+            <input
+              id="edit-image"
+              type="text"
+              required
+              value={image}
+              onChange={(e) => setImage(e.target.value)}
+              placeholder="e.g. ⌚ or standard URL link"
+              disabled={isPending}
+              className="w-full bg-zinc-950 border border-zinc-800 text-sm rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors disabled:opacity-50"
+            />
+          )}
+
+          <button
+            type="button"
+            onClick={() => {
+              setUseUpload(!useUpload);
+              setImage(useUpload ? "📦" : "");
+            }}
+            className="text-[9px] text-indigo-400 hover:text-indigo-300 font-bold mt-2 hover:underline self-start cursor-pointer"
+          >
+            {useUpload ? "Or use emoji/direct URL link instead" : "Or upload a product photo instead"}
+          </button>
         </div>
 
         {/* Description */}
