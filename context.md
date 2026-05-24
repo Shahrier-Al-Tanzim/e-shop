@@ -20,7 +20,7 @@ An industry-grade, highly robust, and Vercel-ready e-commerce platform built wit
 | **Module 2** | Database Setup & Prisma ORM Schema | **Completed** ✅ |
 | **Module 3** | Authentication & Edge Route Guards (NextAuth) | **Completed** ✅ |
 | **Module 4** | Admin Dashboard & Cloudinary Product CRUD | **Completed** ✅ |
-| **Module 5** | Public Product Catalog & ISR Page Caching | *Pending* ⏳ |
+| **Module 5** | Public Product Catalog & ISR Page Caching | **Completed** ✅ |
 | **Module 6** | Zustand Cart System with Slide-over Drawer | *Pending* ⏳ |
 | **Module 7** | Stripe Checkout Session & Webhook Order Fullfilment | *Pending* ⏳ |
 | **Module 8** | Order History & Administration Status Panel | *Pending* ⏳ |
@@ -120,6 +120,16 @@ An industry-grade, highly robust, and Vercel-ready e-commerce platform built wit
   8. Implemented transaction monitor `/admin/orders` featuring client-side `<OrderStatusDropdown />` updating states reactively via Server Actions in transition flows.
   9. Executed successful production compilation check (`npm run build`) in 3.8 seconds with zero warnings or errors.
 - **Files modified**: `lib/cloudinary.ts` (new), `app/actions/admin.ts` (new), `app/(admin)/admin/layout.tsx` (new), `app/(admin)/admin/page.tsx` (new), `app/(admin)/admin/categories/page.tsx` (new), `app/(admin)/admin/categories/CategoryForm.tsx` (new), `app/(admin)/admin/products/page.tsx` (new), `app/(admin)/admin/products/new/page.tsx` (new), `app/(admin)/admin/products/new/NewProductForm.tsx` (new), `app/(admin)/admin/products/[id]/edit/page.tsx` (new), `app/(admin)/admin/products/[id]/edit/EditProductForm.tsx` (new), `app/(admin)/admin/orders/page.tsx` (new), `app/(admin)/admin/orders/OrderStatusDropdown.tsx` (new), `docs/module-4.md` (new)
+
+### Step 16: Formulated Dynamic Storefront Catalog & Details Caches (Module 5)
+- **What was done**:
+  1. Built edge-safe dynamic querying actions in `app/actions/catalog.ts` to locate active Postgres catalog records.
+  2. Implemented dynamic storefront `/products/[slug]/page.tsx` pre-rendering active URL paths at build time using `generateStaticParams()` to yield sub-millisecond static page speeds, with automatic static HTML revalidation structures (`revalidate = 60`).
+  3. Formulated client-safe `<ProductDetailsClient />` detailing Cloudinary thumbnails, specification tables, and a dedicated AI Assistant widget dynamically locked to answering details about the selected product (stock warnings, pricing, descriptions).
+  4. Restructured storefront catalog `app/page.tsx` and `app/HomeClient.tsx` to support path aliases, slug links, live query search bars, and self-adapting category tags matching database listings dynamically.
+  5. Configured on-demand revalidation triggers inside admin Server Actions `app/actions/admin.ts` to clear caches whenever listings are edited or deleted.
+  6. Verified dynamic builds (`npm run build`) compiling and statically generating active detail paths successfully with zero compile warnings or errors.
+- **Files modified**: `app/actions/catalog.ts` (new), `app/products/[slug]/page.tsx` (new), `app/products/[slug]/ProductDetailsClient.tsx` (new), `app/page.tsx`, `app/HomeClient.tsx`, `app/actions/admin.ts`, `docs/module-5.md` (new)
 
 ---
 

@@ -20,6 +20,8 @@ export default async function HomePage() {
   const mappedProducts = products.map((product) => ({
     id: product.id,
     name: product.name,
+    slug: product.slug,
+    description: product.description,
     price: product.price,
     category: product.category?.name || "Uncategorized",
     image: product.images[0] || "📦",

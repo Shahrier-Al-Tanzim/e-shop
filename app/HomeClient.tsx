@@ -7,6 +7,8 @@ import { useSession, signOut } from "next-auth/react";
 interface Product {
   id: string;
   name: string;
+  slug: string;
+  description: string;
   price: number;
   category: string;
   image: string;
@@ -43,6 +45,22 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [cartItems, setCartItems] = useState<{product: Product; qty: number}[]>([]);
+
+  // Search & Category Filters State
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+
+  // Dynamically extract active category filter chips from products list
+  const uniqueCategories = ["All", ...Array.from(new Set(initialProducts.map(p => p.category)))];
+
+  // Perform multi-dimensional client-side queries
+  const filteredProducts = initialProducts.filter(product => {
+    const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
+    const matchesSearch = 
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      product.description.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   // Simulated AI responses
   const getSimulatedAIResponse = (query: string): string => {
@@ -229,7 +247,7 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
               <p className="text-zinc-400 text-sm mt-2">Each card represents an isolated system built sequentially for complete safety.</p>
             </div>
             <div className="text-xs bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 mt-4 md:mt-0 max-w-fit font-semibold text-indigo-400">
-              Active Branch: <code className="font-mono">module-4-admin</code>
+              Active Branch: <code className="font-mono">module-5-catalog</code>
             </div>
           </div>
 
@@ -322,32 +340,83 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
 
         {/* Store Catalog Section */}
         <section id="store" className="scroll-mt-24 mb-20">
-          <div className="flex items-center justify-between mb-12">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
             <div>
               <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Active Live Catalog</h2>
               <p className="text-zinc-400 text-sm mt-2">Displaying live products queried directly from our serverless Neon database.</p>
             </div>
-            <div className="text-xs text-zinc-400 font-semibold bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2">
+            <div className="text-xs text-zinc-400 font-semibold bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 shrink-0 self-start md:self-end">
               Source: <span className="text-indigo-400 font-mono">Neon Postgres Live</span>
             </div>
           </div>
 
-          {initialProducts.length === 0 ? (
-            <div className="glass-panel rounded-2xl p-16 text-center text-zinc-500">
+          {/* Search Bar and Category Chips Panel */}
+          <div className="glass-panel p-6 rounded-2xl mb-10 space-y-6 shadow-xl">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+              
+              {/* Search Box */}
+              <div className="md:col-span-2 relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">🔍</span>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search products by title, crafted details, or categories..."
+                  className="w-full bg-zinc-950 border border-zinc-800 hover:border-zinc-700 focus:border-indigo-500 text-xs rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none transition-colors"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 text-xs font-bold"
+                  >
+                    ✕ Clear
+                  </button>
+                )}
+              </div>
+              
+              {/* Reset Button */}
+              <div className="text-right">
+                <span className="text-[10px] uppercase font-bold tracking-widest text-zinc-500 bg-zinc-900/60 border border-zinc-800 px-3 py-1.5 rounded-lg">
+                  {filteredProducts.length} Listings Matching
+                </span>
+              </div>
+
+            </div>
+
+            {/* Category selection tags */}
+            <div className="flex flex-wrap gap-2.5 pt-2 border-t border-zinc-900">
+              {uniqueCategories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`text-[10px] uppercase font-black tracking-wider px-3.5 py-2 rounded-xl transition-all cursor-pointer border ${
+                    selectedCategory === cat
+                      ? "bg-zinc-50 border-zinc-200 text-zinc-950 font-bold scale-[1.01]"
+                      : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {filteredProducts.length === 0 ? (
+            <div className="glass-panel rounded-2xl p-16 text-center text-zinc-500 shadow-xl">
               <span className="text-5xl">📦</span>
               <p className="font-semibold text-zinc-400 text-lg mt-4">No active catalog items found</p>
               <p className="text-sm mt-1 max-w-md mx-auto">
-                Log into the Admin Panel using an administrator account to create and activate your products.
+                No listings match your search or filter options. Try adjusting filters or resetting search input parameters.
               </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {initialProducts.map(product => (
-                <div key={product.id} className="glass-panel rounded-2xl overflow-hidden hover:scale-[1.02] hover:border-indigo-500/40 transition-all duration-300 flex flex-col group h-full">
+              {filteredProducts.map(product => (
+                <div key={product.id} className="glass-panel rounded-2xl overflow-hidden hover:scale-[1.02] hover:border-indigo-500/40 transition-all duration-300 flex flex-col group h-full shadow-lg">
                   
                   {/* Product Image Panel */}
-                  <div className="h-48 bg-zinc-950 border-b border-zinc-800/80 flex items-center justify-center text-6xl relative select-none overflow-hidden">
-                    {product.image.startsWith("http") ? (
+                  <Link href={`/products/${product.slug}`} className="cursor-pointer block relative select-none overflow-hidden h-48 bg-zinc-950 border-b border-zinc-800/80 flex items-center justify-center text-6xl">
+                    {product.image.startsWith("http") || product.image.startsWith("data:image") ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img 
                         src={product.image} 
@@ -359,16 +428,16 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
                     )}
 
                     {product.stock === 0 && (
-                      <span className="absolute top-3 left-3 bg-red-950 text-red-400 text-[10px] font-extrabold border border-red-900/60 px-2 py-0.5 rounded-md">
+                      <span className="absolute top-3 left-3 bg-red-950 text-red-400 text-[10px] font-extrabold border border-red-900/60 px-2 py-0.5 rounded-md z-10">
                         Out of Stock
                       </span>
                     )}
                     {product.stock > 0 && product.stock <= 5 && (
-                      <span className="absolute top-3 left-3 bg-amber-950 text-amber-400 text-[10px] font-extrabold border border-amber-900/60 px-2 py-0.5 rounded-md">
+                      <span className="absolute top-3 left-3 bg-amber-950 text-amber-400 text-[10px] font-extrabold border border-amber-900/60 px-2 py-0.5 rounded-md z-10">
                         Low Stock ({product.stock})
                       </span>
                     )}
-                  </div>
+                  </Link>
 
                   {/* Product Info */}
                   <div className="p-5 flex-1 flex flex-col justify-between">
@@ -376,9 +445,13 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
                       <span className="text-[10px] uppercase font-bold tracking-widest text-zinc-500">
                         {product.category}
                       </span>
-                      <h3 className="font-bold text-white mt-1 group-hover:text-indigo-400 transition-colors truncate">
-                        {product.name}
-                      </h3>
+                      
+                      <Link href={`/products/${product.slug}`} className="cursor-pointer block">
+                        <h3 className="font-bold text-white mt-1 group-hover:text-indigo-400 transition-colors truncate">
+                          {product.name}
+                        </h3>
+                      </Link>
+                      
                       <div className="flex items-center gap-1 mt-2">
                         <span className="text-xs text-amber-400">★</span>
                         <span className="text-xs text-zinc-300 font-semibold">{product.rating}</span>
@@ -395,7 +468,7 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
                         className={`text-xs px-3.5 py-2 rounded-lg font-bold border transition-all ${
                           product.stock === 0
                             ? "bg-zinc-900 text-zinc-600 border-zinc-800 cursor-not-allowed"
-                            : "bg-zinc-50 text-zinc-950 hover:bg-zinc-200 border-zinc-300 cursor-pointer"
+                            : "bg-zinc-50 text-zinc-950 hover:bg-zinc-200 border-zinc-300 cursor-pointer shadow-sm"
                         }`}
                       >
                         {product.stock === 0 ? "Unavailable" : "Add to Cart"}
