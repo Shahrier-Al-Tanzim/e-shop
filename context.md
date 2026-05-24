@@ -8,7 +8,7 @@ This file is the living context ledger for our E-Shop project. Every time we imp
 An industry-grade, highly robust, and Vercel-ready e-commerce platform built with Next.js 14+ (App Router), React 19, Tailwind CSS v4, Neon PostgreSQL, Prisma ORM, Auth.js (NextAuth v5), Cloudinary, Stripe, and an advanced AI Support Assistant.
 
 - **Current Repository Path**: `c:\Projects\e-shop`
-- **Active Git Branch**: `module-3-auth`
+- **Active Git Branch**: `module-6-cart`
 
 ---
 
@@ -21,7 +21,7 @@ An industry-grade, highly robust, and Vercel-ready e-commerce platform built wit
 | **Module 3** | Authentication & Edge Route Guards (NextAuth) | **Completed** ✅ |
 | **Module 4** | Admin Dashboard & Cloudinary Product CRUD | **Completed** ✅ |
 | **Module 5** | Public Product Catalog & ISR Page Caching | **Completed** ✅ |
-| **Module 6** | Zustand Cart System with Slide-over Drawer | *Pending* ⏳ |
+| **Module 6** | Zustand Cart System with Slide-over Drawer | **Completed** ✅ |
 | **Module 7** | Stripe Checkout Session & Webhook Order Fullfilment | *Pending* ⏳ |
 | **Module 8** | Order History & Administration Status Panel | *Pending* ⏳ |
 | **Module 9** | Post-launch AI Support Assistant with Function Calling | *Pending* ⏳ |
@@ -130,6 +130,16 @@ An industry-grade, highly robust, and Vercel-ready e-commerce platform built wit
   5. Configured on-demand revalidation triggers inside admin Server Actions `app/actions/admin.ts` to clear caches whenever listings are edited or deleted.
   6. Verified dynamic builds (`npm run build`) compiling and statically generating active detail paths successfully with zero compile warnings or errors.
 - **Files modified**: `app/actions/catalog.ts` (new), `app/products/[slug]/page.tsx` (new), `app/products/[slug]/ProductDetailsClient.tsx` (new), `app/page.tsx`, `app/HomeClient.tsx`, `app/actions/admin.ts`, `docs/module-5.md` (new)
+ 
+### Step 17: Built Globally Persistent Zustand Cart System (Module 6)
+- **What was done**:
+  1. Installed the standard `zustand` npm package for global React state management.
+  2. Implemented the global state store `lib/store/useCartStore.ts` using Zustand's `persist` middleware, incorporating active stock validations, quantity adjustment controls, and drawer state variables.
+  3. Created the unified frosted-glass `<CartDrawer />` slide-over component under `components/CartDrawer.tsx` to handle visual item details, quantity controls, subtotals, and check-out CTA buttons.
+  4. Redesigned `app/HomeClient.tsx` and `app/products/[slug]/ProductDetailsClient.tsx` to remove their isolated local state drawer stubs and replace them with our globally persistent Zustand store.
+  5. Implemented React client hydration safeguarding `isMounted` mount checks to prevent Next.js SSR hydration discrepancies.
+  6. Verified dynamic static builds (`npm run build`) compiling with 100% success and statically pre-rendering all active catalog paths with zero warnings or errors.
+- **Files modified**: `lib/store/useCartStore.ts` (new), `components/CartDrawer.tsx` (new), `app/HomeClient.tsx`, `app/products/[slug]/ProductDetailsClient.tsx`, `package.json`, `package-lock.json`, `docs/module-6.md` (new)
 
 ---
 
@@ -176,3 +186,6 @@ An industry-grade, highly robust, and Vercel-ready e-commerce platform built wit
 - **How it works**: Next.js 16 renamed the `middleware.ts` file convention to `proxy.ts`. Both serve identical purposes — running server-side code before a request completes — but using `middleware.ts` now triggers a deprecation warning. Only one `proxy.ts` file is allowed per project, placed at the workspace root.
 - **Our implementation**: `proxy.ts` exports `NextAuth(authConfig).auth` and a matcher config, intercepting all non-API, non-static routes to enforce authentication and role checks.
 
+### 10. Persistent Zustand Store & Client Hydration Guards
+- **How it works**: Zustand uses a simple create function to expose react reactive selectors. Adding the `persist` middleware serializes state metrics directly into `localStorage`. 
+- **Hydration protection**: Next.js App Router renders pages on the server first, where `localStorage` is not available. To prevent classic React hydration discrepancy warnings, components check a local client-side `isMounted` mount state before executing Zustand localStorage dependencies.
