@@ -98,6 +98,7 @@ export async function createProduct(prevState: any, formData: FormData) {
 
     revalidatePath("/");
     revalidatePath("/admin/products");
+    revalidatePath(`/products/${slug}`);
     return { success: "Product created successfully!" };
   } catch (error: any) {
     console.error("Failed to create product:", error);
@@ -171,6 +172,7 @@ export async function updateProduct(id: string, prevState: any, formData: FormDa
     revalidatePath("/");
     revalidatePath("/admin/products");
     revalidatePath(`/admin/products/${id}/edit`);
+    revalidatePath(`/products/${slug}`);
     return { success: "Product updated successfully!" };
   } catch (error: any) {
     console.error("Failed to update product:", error);
@@ -182,12 +184,20 @@ export async function deleteProduct(id: string) {
   try {
     await verifyAdmin();
 
+    const product = await prisma.product.findUnique({
+      where: { id },
+      select: { slug: true },
+    });
+
     await prisma.product.delete({
       where: { id },
     });
 
     revalidatePath("/");
     revalidatePath("/admin/products");
+    if (product) {
+      revalidatePath(`/products/${product.slug}`);
+    }
     return { success: "Product deleted successfully!" };
   } catch (error: any) {
     console.error("Failed to delete product:", error);
