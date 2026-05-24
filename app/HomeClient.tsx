@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
+import { useCartStore } from "@/lib/store/useCartStore";
+import CartDrawer from "@/components/CartDrawer";
 
 interface Product {
   id: string;
@@ -42,9 +44,18 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
     }
   ]);
   const [userInput, setUserInput] = useState("");
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [cartCount, setCartCount] = useState(0);
-  const [cartItems, setCartItems] = useState<{product: Product; qty: number}[]>([]);
+
+  // Hydration Mount Safety Safeguard
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Hook E-Shop store selectors and triggers
+  const addItem = useCartStore((state) => state.addItem);
+  const toggleDrawer = useCartStore((state) => state.toggleDrawer);
+  const cartItems = useCartStore((state) => state.items);
+  const cartCount = useCartStore((state) => state.getCartCount());
 
   // Search & Category Filters State
   const [searchQuery, setSearchQuery] = useState("");
@@ -107,20 +118,8 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
   };
 
   const handleAddToCart = (product: Product) => {
-    if (product.stock === 0) return;
-    setCartCount(prev => prev + 1);
-    setCartItems(prev => {
-      const existing = prev.find(item => item.product.id === product.id);
-      if (existing) {
-        return prev.map(item => item.product.id === product.id ? {...item, qty: item.qty + 1} : item);
-      } else {
-        return [...prev, { product, qty: 1 }];
-      }
-    });
-  };
-
-  const calculateTotal = () => {
-    return cartItems.reduce((acc, item) => acc + (item.product.price * item.qty), 0).toFixed(2);
+    addItem(product);
+    toggleDrawer(true); // Open the uploader drawer reactively!
   };
 
   return (
@@ -154,11 +153,11 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
 
           <div className="flex items-center gap-4">
             <button 
-              onClick={() => setIsCartOpen(true)}
+              onClick={() => toggleDrawer(true)}
               className="relative p-2 rounded-lg bg-zinc-900/80 hover:bg-zinc-800/80 border border-zinc-800 transition-all group cursor-pointer"
             >
               🛒
-              {cartCount > 0 && (
+              {isMounted && cartCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-indigo-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold animate-bounce">
                   {cartCount}
                 </span>
@@ -497,83 +496,8 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
         </div>
       </footer>
 
-      {/* Cart Sidebar Panel */}
-      {isCartOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setIsCartOpen(false)}></div>
-          <div className="absolute inset-y-0 right-0 max-w-full flex">
-            <div className="w-screen max-w-md glass-panel flex flex-col h-full shadow-2xl animate-fade-in border-l border-zinc-800">
-              
-              {/* Header */}
-              <div className="px-6 py-5 border-b border-zinc-800 flex items-center justify-between">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  Shopping Cart <span>({cartCount})</span>
-                </h2>
-                <button 
-                  onClick={() => setIsCartOpen(false)}
-                  className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all text-xs cursor-pointer"
-                >
-                  ✕ Close
-                </button>
-              </div>
-
-              {/* Items */}
-              <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-                {cartItems.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-center text-zinc-500">
-                    <span className="text-4xl mb-4">🛒</span>
-                    <p className="font-semibold text-zinc-400">Your cart is empty</p>
-                    <p className="text-xs mt-1">Add items from the active catalog to start shopping!</p>
-                  </div>
-                ) : (
-                  cartItems.map(item => (
-                    <div key={item.product.id} className="flex items-center gap-4 bg-zinc-900/50 border border-zinc-900 p-3 rounded-xl">
-                      <div className="w-12 h-12 rounded-lg bg-zinc-950 flex items-center justify-center text-2xl overflow-hidden shrink-0">
-                        {item.product.image.startsWith("http") ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img 
-                            src={item.product.image} 
-                            alt={item.product.name} 
-                            className="w-full h-full object-cover rounded-lg"
-                          />
-                        ) : (
-                          item.product.image
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-bold text-white truncate">{item.product.name}</h4>
-                        <p className="text-xs text-zinc-400 mt-0.5">${item.product.price.toFixed(2)} x {item.qty}</p>
-                      </div>
-                      <span className="font-extrabold text-sm text-white shrink-0">
-                        ${(item.product.price * item.qty).toFixed(2)}
-                      </span>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              {/* Footer */}
-              {cartItems.length > 0 && (
-                <div className="p-6 border-t border-zinc-800 bg-zinc-950/80 space-y-4">
-                  <div className="flex items-center justify-between font-bold text-white text-base">
-                    <span>Subtotal</span>
-                    <span>${calculateTotal()}</span>
-                  </div>
-                  <p className="text-[10px] text-zinc-500 leading-relaxed">
-                    * Zustand state will sync dynamically to Neon PostgreSQL during Module 7 Checkout flow.
-                  </p>
-                  <button 
-                    onClick={() => alert("Checkout pipeline will be connected in Module 7!")}
-                    className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition-all border border-indigo-500/30 cursor-pointer"
-                  >
-                    Proceed to Checkout
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Global Shopping Cart Sidebar Panel */}
+      <CartDrawer />
 
       {/* Floating AI Chat Assistant Drawer */}
       <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end">
