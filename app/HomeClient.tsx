@@ -246,7 +246,7 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
               <p className="text-zinc-400 text-sm mt-2">Each card represents an isolated system built sequentially for complete safety.</p>
             </div>
             <div className="text-xs bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 mt-4 md:mt-0 max-w-fit font-semibold text-indigo-400">
-              Active Branch: <code className="font-mono">module-5-catalog</code>
+              Active Branch: <code className="font-mono">module-6-cart</code>
             </div>
           </div>
 
