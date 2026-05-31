@@ -1,6 +1,9 @@
 # Project Context Ledger (`context.md`)
 
 This file is the living context ledger for our E-Shop project. Every time we implement or modify a feature, we will update this document to keep track of what is happening, the file structure, how the code works, the tools used, and the chronological steps taken.
+# Project Context Ledger (`context.md`)
+
+This file is the living context ledger for our E-Shop project. Every time we implement or modify a feature, we will update this document to keep track of what is happening, the file structure, how the code works, the tools used, and the chronological steps taken.
 
 ---
 
@@ -8,7 +11,7 @@ This file is the living context ledger for our E-Shop project. Every time we imp
 An industry-grade, highly robust, and Vercel-ready e-commerce platform built with Next.js 14+ (App Router), React 19, Tailwind CSS v4, Neon PostgreSQL, Prisma ORM, Auth.js (NextAuth v5), Cloudinary, Stripe, and an advanced AI Support Assistant.
 
 - **Current Repository Path**: `c:\Projects\e-shop`
-- **Active Git Branch**: `module-6-cart`
+- **Active Git Branch**: `module-7-checkout`
 
 ---
 
@@ -22,7 +25,7 @@ An industry-grade, highly robust, and Vercel-ready e-commerce platform built wit
 | **Module 4** | Admin Dashboard & Cloudinary Product CRUD | **Completed** ✅ |
 | **Module 5** | Public Product Catalog & ISR Page Caching | **Completed** ✅ |
 | **Module 6** | Zustand Cart System with Slide-over Drawer | **Completed** ✅ |
-| **Module 7** | Stripe Checkout Session & Webhook Order Fullfilment | *Pending* ⏳ |
+| **Module 7** | Stripe Checkout Session & Webhook Order Fullfilment | **Completed** ✅ |
 | **Module 8** | Order History & Administration Status Panel | *Pending* ⏳ |
 | **Module 9** | Post-launch AI Support Assistant with Function Calling | *Pending* ⏳ |
 
@@ -140,6 +143,17 @@ An industry-grade, highly robust, and Vercel-ready e-commerce platform built wit
   5. Implemented React client hydration safeguarding `isMounted` mount checks to prevent Next.js SSR hydration discrepancies.
   6. Verified dynamic static builds (`npm run build`) compiling with 100% success and statically pre-rendering all active catalog paths with zero warnings or errors.
 - **Files modified**: `lib/store/useCartStore.ts` (new), `components/CartDrawer.tsx` (new), `app/HomeClient.tsx`, `app/products/[slug]/ProductDetailsClient.tsx`, `package.json`, `package-lock.json`, `docs/module-6.md` (new)
+ 
+### Step 18: Integrated Stripe Hosted Payments & Edge Webhooks (Module 7)
+- **What was done**:
+  1. Installed standard `stripe` Node library for secure payment session routing.
+  2. Built the server-side Stripe SDK helper wrapper under `lib/stripe.ts`.
+  3. Engineered dual checkout Server Actions inside `app/actions/checkout.ts` to coordinate item database validation, transactional stock decrements, and secure session creation.
+  4. Formulated NextAuth edge-protected Checkout page `/checkout` under `app/checkout/page.tsx` and interactive glassmorphic Console form `app/checkout/CheckoutClient.tsx`.
+  5. Implemented client-side automatic Zustand storage purging Success page under `app/checkout/success/page.tsx` and `app/checkout/success/SuccessClient.tsx`.
+  6. Constructed Edge-compatible signature verifying POST Webhook endpoint `app/api/payments/stripe-webhook/route.ts` to execute paid order mutations and deduct inventory stocks upon verification.
+  7. Re-wired storefront drawer button `components/CartDrawer.tsx` to route users directly into checkout, and updated the homepage roadmap indicators.
+- **Files modified**: `lib/stripe.ts` (new), `app/actions/checkout.ts` (new), `app/checkout/page.tsx` (new), `app/checkout/CheckoutClient.tsx` (new), `app/checkout/success/page.tsx` (new), `app/checkout/success/SuccessClient.tsx` (new), `app/api/payments/stripe-webhook/route.ts` (new), `components/CartDrawer.tsx`, `app/HomeClient.tsx`, `package.json`, `package-lock.json`, `docs/module-7.md` (new)
 
 ---
 
@@ -187,5 +201,8 @@ An industry-grade, highly robust, and Vercel-ready e-commerce platform built wit
 - **Our implementation**: `proxy.ts` exports `NextAuth(authConfig).auth` and a matcher config, intercepting all non-API, non-static routes to enforce authentication and role checks.
 
 ### 10. Persistent Zustand Store & Client Hydration Guards
-- **How it works**: Zustand uses a simple create function to expose react reactive selectors. Adding the `persist` middleware serializes state metrics directly into `localStorage`. 
 - **Hydration protection**: Next.js App Router renders pages on the server first, where `localStorage` is not available. To prevent classic React hydration discrepancy warnings, components check a local client-side `isMounted` mount state before executing Zustand localStorage dependencies.
+
+### 11. Stripe Checkout Sessions & Webhooks Verification
+- **How it works**: Spawning Stripe Checkout sessions on server actions yields secure hosted payment pages, eliminating complex client-side PCI compliance operations. Paid transactions are fulfilled asynchronously by registering an Edge-compatible POST Webhook receiver endpoint.
+- **Signature Security**: Payloads are parsed as raw strings and verified against `process.env.STRIPE_WEBHOOK_SECRET` utilizing `stripe.webhooks.constructEvent()` to ensure authentication before updating PostgreSQL records.
