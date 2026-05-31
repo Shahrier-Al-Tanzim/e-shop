@@ -181,9 +181,12 @@ export default function ProductDetailsClient({ product }: { product: Product }) 
                     Admin Panel
                   </Link>
                 ) : (
-                  <span className="text-xs font-semibold bg-zinc-900 text-zinc-400 px-3.5 py-2 rounded-lg border border-zinc-800">
-                    Customer
-                  </span>
+                  <Link 
+                    href="/profile" 
+                    className="inline-flex text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 text-zinc-300 px-3.5 py-2 rounded-lg border border-zinc-800 transition-colors cursor-pointer"
+                  >
+                    My Orders
+                  </Link>
                 )}
 
                 <button 
