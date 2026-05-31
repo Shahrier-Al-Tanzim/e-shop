@@ -246,7 +246,7 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
               <p className="text-zinc-400 text-sm mt-2">Each card represents an isolated system built sequentially for complete safety.</p>
             </div>
             <div className="text-xs bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 mt-4 md:mt-0 max-w-fit font-semibold text-indigo-400">
-              Active Branch: <code className="font-mono">module-6-cart</code>
+              Active Branch: <code className="font-mono">module-7-checkout</code>
             </div>
           </div>
 
@@ -308,15 +308,15 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
             </div>
 
             {/* Card 5 */}
-            <div className="bg-zinc-900/30 border border-zinc-900 rounded-2xl p-6 relative overflow-hidden group">
+            <div className="glass-panel rounded-2xl p-6 relative overflow-hidden group border border-indigo-500/40">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-2xl">💳</span>
-                <span className="text-[10px] bg-zinc-800 text-zinc-500 border border-zinc-800 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                  Upcoming
+                <span className="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider animate-pulse">
+                  Complete
                 </span>
               </div>
-              <h3 className="font-bold text-lg text-white/80 mb-2">Module 7: Stripe Checkout</h3>
-              <p className="text-zinc-500 text-xs leading-relaxed mb-4">
+              <h3 className="font-bold text-lg text-white mb-2">Module 7: Stripe Checkout</h3>
+              <p className="text-zinc-400 text-xs leading-relaxed mb-4">
                 Hook up Stripe payment link flows. Support both Cash on Delivery (COD) state and Stripe Webhook event listeners to auto-confirm order fulfillment.
               </p>
             </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import { useCartStore } from "@/lib/store/useCartStore";
 
 export default function CartDrawer() {
@@ -141,12 +142,13 @@ export default function CartDrawer() {
                 * Zustand global store state synchronized dynamically. Stripe hosted checkout session and Webhooks checkout fulfillment will plug in during Module 7.
               </p>
               
-              <button 
-                onClick={() => alert("Checkout pipeline will connect dynamically in Module 7!")}
+              <Link 
+                href="/checkout"
+                onClick={() => toggleDrawer(false)}
                 className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 rounded-xl transition-all border border-indigo-500/30 cursor-pointer text-xs flex items-center justify-center gap-2 hover:scale-[1.01]"
               >
                 🔒 Proceed to Checkout
-              </button>
+              </Link>
 
             </div>
           )}
