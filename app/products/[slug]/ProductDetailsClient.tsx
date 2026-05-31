@@ -338,13 +338,13 @@ export default function ProductDetailsClient({ product }: { product: Product }) 
       {/* Floating AI Chat Assistant Drawer */}
       <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end">
         
-        {/* Chat Toggle Button */}
-        <button
+        {/* Chat Toggle Button {Disabled for now} */}
+        {/* <button
           onClick={() => setIsChatOpen(!isChatOpen)}
           className="w-14 h-14 rounded-full bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-400 hover:to-violet-500 text-white flex items-center justify-center shadow-lg hover:scale-105 transition-all glow-indigo cursor-pointer text-2xl border border-indigo-400/30"
         >
           {isChatOpen ? "✕" : "🤖"}
-        </button>
+        </button> */}
 
         {/* Chat Window Panel */}
         {isChatOpen && (

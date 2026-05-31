@@ -5,9 +5,22 @@ import HomeClient from "./HomeClient";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  // Query all active products from Neon database including category mappings
+  // Query all active products from Neon database including category mappings,
+  // excluding the default hardcoded seed products.
   const products = await prisma.product.findMany({
-    where: { isActive: true },
+    where: { 
+      isActive: true,
+      NOT: {
+        slug: {
+          in: [
+            "solitude-glass-chronograph",
+            "frosted-cybernetic-headphones",
+            "indigo-glassmorphic-keycaps",
+            "minimalist-leather-cardholder",
+          ]
+        }
+      }
+    },
     include: {
       category: {
         select: { name: true },
