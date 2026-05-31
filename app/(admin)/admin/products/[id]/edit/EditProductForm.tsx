@@ -46,8 +46,8 @@ export default function EditProductForm({ product, categories }: Props) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 4 * 1024 * 1024) {
-        setError("File size is too large! Maximum limit is 4MB.");
+      if (file.size > 20 * 1024 * 1024) {
+        setError("File size is too large! Maximum limit is 20MB.");
         return;
       }
       const reader = new FileReader();
@@ -196,10 +196,10 @@ export default function EditProductForm({ product, categories }: Props) {
                 <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer py-1">
                   <span className="text-xl mb-0.5">📷</span>
                   <span className="text-[11px] font-bold text-zinc-300">Choose Product Photo</span>
-                  <span className="text-[9px] text-zinc-500 mt-0.5">PNG, JPG, or WEBP up to 4MB</span>
+                  <span className="text-[9px] text-zinc-500 mt-0.5">PNG, JPG, JPEG, or WEBP up to 20MB</span>
                   <input
                     type="file"
-                    accept="image/*"
+                    accept=".png,.jpg,.jpeg,.webp"
                     onChange={handleFileChange}
                     disabled={isPending}
                     className="hidden"
