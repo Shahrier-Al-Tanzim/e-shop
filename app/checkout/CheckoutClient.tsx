@@ -9,15 +9,22 @@ import { createCodOrder, createStripeSession } from "@/app/actions/checkout";
 interface CheckoutClientProps {
   userEmail: string;
   userName: string;
+  defaultAddress: string;
+  defaultPhone: string;
 }
 
-export default function CheckoutClient({ userEmail, userName }: CheckoutClientProps) {
+export default function CheckoutClient({ 
+  userEmail, 
+  userName,
+  defaultAddress,
+  defaultPhone
+}: CheckoutClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { items, clearCart, getCartTotal } = useCartStore();
 
-  const [address, setAddress] = useState("");
-  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState(defaultAddress);
+  const [phone, setPhone] = useState(defaultPhone);
   const [paymentMethod, setPaymentMethod] = useState<"STRIPE" | "COD">("STRIPE");
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("");

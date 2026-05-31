@@ -183,9 +183,12 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
                     Admin Panel
                   </Link>
                 ) : (
-                  <span className="text-xs font-semibold bg-zinc-900 text-zinc-400 px-3.5 py-2 rounded-lg border border-zinc-800">
-                    Customer
-                  </span>
+                  <Link 
+                    href="/profile" 
+                    className="inline-flex text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 text-zinc-300 px-3.5 py-2 rounded-lg border border-zinc-800 transition-colors cursor-pointer"
+                  >
+                    My Orders
+                  </Link>
                 )}
 
                 <button 
@@ -246,7 +249,7 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
               <p className="text-zinc-400 text-sm mt-2">Each card represents an isolated system built sequentially for complete safety.</p>
             </div>
             <div className="text-xs bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 mt-4 md:mt-0 max-w-fit font-semibold text-indigo-400">
-              Active Branch: <code className="font-mono">module-7-checkout</code>
+              Active Branch: <code className="font-mono">module-8-history</code>
             </div>
           </div>
 
