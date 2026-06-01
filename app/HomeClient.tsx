@@ -39,7 +39,7 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
     {
       id: "1",
       sender: "assistant",
-      text: "Hi there! I am your AI E-Shop Assistant. I will be fully integrated with function tools in Module 9. Ask me anything about our tech stack, Vercel deployments, or roadmap!",
+      text: "Hi there! I am your AI E Shop Assistant. I will be fully integrated with function tools in Module 9. Ask me anything about our tech stack, Vercel deployments, or roadmap!",
       timestamp: "03:00 AM"
     }
   ]);
@@ -51,7 +51,7 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
     setIsMounted(true);
   }, []);
 
-  // Hook E-Shop store selectors and triggers
+  // Hook E Shop store selectors and triggers
   const addItem = useCartStore((state) => state.addItem);
   const toggleDrawer = useCartStore((state) => state.toggleDrawer);
   const cartItems = useCartStore((state) => state.items);
@@ -134,7 +134,7 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Link href="/" className="text-xl font-bold tracking-tight bg-gradient-to-r from-indigo-400 to-violet-500 bg-clip-text text-transparent">
-              E-Shop
+              E Shop
             </Link>
             <span className="text-[10px] uppercase tracking-widest bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full border border-zinc-700">
               v1.0
@@ -378,7 +378,7 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
       <footer className="border-t border-zinc-900 bg-zinc-950 px-6 py-12 text-center text-sm text-zinc-500 z-10">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
-            © 2026 E-Shop. All rights reserved.
+            © 2026 E Shop. All rights reserved.
           </div>
           <div className="flex items-center gap-6">
             <a href="https://nextjs.org" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Next.js 16</a>
