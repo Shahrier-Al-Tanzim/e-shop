@@ -116,7 +116,7 @@ export default function ProfileClient({
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Link href="/" className="text-xl font-bold tracking-tight bg-gradient-to-r from-indigo-400 to-violet-500 bg-clip-text text-transparent">
-              AG.ESHOP
+              E-Shop
             </Link>
             <span className="text-[10px] uppercase tracking-widest bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full border border-zinc-700 font-bold">
               Dashboard
@@ -441,7 +441,7 @@ export default function ProfileClient({
 
       {/* Footer */}
       <footer className="border-t border-zinc-900 bg-zinc-950 px-6 py-8 text-center text-xs text-zinc-550 z-10">
-        © 2026 AG.ESHOP. Secure Edge Fulfillment Ledgers.
+        © 2026 E-Shop. Secure Edge Fulfillment Ledgers.
       </footer>
 
     </div>

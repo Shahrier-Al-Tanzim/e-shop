@@ -5,7 +5,7 @@ import prisma from "@/lib/prisma";
 import SuccessClient from "./SuccessClient";
 
 export const metadata = {
-  title: "Order Placed Successfully | AG.ESHOP",
+  title: "Order Placed Successfully | E-Shop",
   description: "Your premium order has been successfully placed in our database.",
 };
 
@@ -61,7 +61,7 @@ export default async function SuccessPage({ searchParams }: PageProps) {
               Order Confirmed & Placed!
             </h1>
             <p className="text-xs text-zinc-400 max-w-md mx-auto leading-relaxed">
-              Thank you for shopping with AG.ESHOP. Your transaction has been registered and is being routed to our edge fulfillment centers.
+              Thank you for shopping with E-Shop. Your transaction has been registered and is being routed to our edge fulfillment centers.
             </p>
           </div>
 
@@ -140,7 +140,7 @@ export default async function SuccessPage({ searchParams }: PageProps) {
 
       {/* Footer */}
       <footer className="border-t border-zinc-900 bg-zinc-950 px-6 py-8 text-center text-xs text-zinc-550 z-10">
-        © 2026 AG.ESHOP. Secure Edge Webhooks Verification.
+        © 2026 E-Shop. Secure Edge Webhooks Verification.
       </footer>
 
     </div>

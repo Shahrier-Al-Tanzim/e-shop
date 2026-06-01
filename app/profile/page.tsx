@@ -5,7 +5,7 @@ import prisma from "@/lib/prisma";
 import ProfileClient from "./ProfileClient";
 
 export const metadata = {
-  title: "My Account Profile | AG.ESHOP",
+  title: "My Account Profile | E-Shop",
   description: "View your order transactions history and fulfillment tracking status.",
 };
 
