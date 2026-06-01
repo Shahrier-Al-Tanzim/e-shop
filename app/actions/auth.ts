@@ -4,6 +4,19 @@ import { signIn } from "../../auth";
 import prisma from "../../lib/prisma";
 import bcryptjs from "bcryptjs";
 import { AuthError } from "next-auth";
+import { z } from "zod";
+
+const registerSchema = z.object({
+  name: z.string().min(2, "Full Name must be at least 2 characters long!"),
+  email: z.string().email("Please provide a valid email address!"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters long!")
+    .regex(/[A-Z]/, "Password must contain at least 1 uppercase letter!")
+    .regex(/[a-z]/, "Password must contain at least 1 lowercase letter!")
+    .regex(/[0-9]/, "Password must contain at least 1 numerical digit!")
+    .regex(/[^A-Za-z0-9]/, "Password must contain at least 1 special character!"),
+});
 
 export async function registerUser(prevState: any, formData: FormData) {
   try {
@@ -15,9 +28,10 @@ export async function registerUser(prevState: any, formData: FormData) {
       return { error: "All fields are required!" };
     }
 
-    // Keep password check open and simple for testing convenience
-    if (password.length < 4) {
-      return { error: "Password must be at least 4 characters long!" };
+    // Server-side Zod validation
+    const validationResult = registerSchema.safeParse({ name, email, password });
+    if (!validationResult.success) {
+      return { error: validationResult.error.issues[0].message };
     }
 
     // Check if user already exists
