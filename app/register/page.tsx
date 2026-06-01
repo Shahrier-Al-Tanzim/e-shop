@@ -52,7 +52,7 @@ export default function RegisterPage() {
               Create Account
             </h1>
             <p className="mt-2 text-sm text-zinc-400">
-              Join E-Shop and start collecting premium items
+              Join E Shop and start collecting premium items
             </p>
           </div>
 

@@ -46,7 +46,7 @@ function LoginForm() {
               Welcome Back
             </h1>
             <p className="mt-2 text-sm text-zinc-400">
-              Sign in to your e-shop customer account
+              Sign in to your E Shop customer account
             </p>
           </div>
 

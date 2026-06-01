@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "E-Shop | Premium E-Commerce Experience",
+  title: "E Shop | Premium E-Commerce Experience",
   description: "An industry-grade, highly-robust Next.js e-commerce platform.",
 };
 

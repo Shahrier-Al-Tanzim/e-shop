@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 
 export const metadata = {
-  title: "Admin Dashboard | E-Shop Console",
+  title: "Admin Dashboard | E Shop Console",
   description: "Secure operational control panel for e-shop administrators.",
 };
 
@@ -32,7 +32,7 @@ export default async function AdminLayout({
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href="/" className="text-lg font-black tracking-wider bg-gradient-to-r from-indigo-400 to-violet-500 bg-clip-text text-transparent">
-              E-Shop Admin
+              E Shop Admin
             </Link>
             <span className="text-[9px] uppercase tracking-widest bg-indigo-950 text-indigo-400 border border-indigo-900/60 px-2 py-0.5 rounded-full font-bold">
               Secure Admin
