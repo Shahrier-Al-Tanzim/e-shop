@@ -299,17 +299,26 @@ export default function ProductDetailsClient({ product }: { product: Product }) 
 
             {/* Actions: Add to Cart */}
             <div className="pt-6 flex gap-4">
-              <button
-                onClick={handleAddToCart}
-                disabled={clientProduct.stock === 0}
-                className={`flex-1 font-bold py-4 px-6 rounded-2xl border transition-all text-sm flex items-center justify-center gap-2 hover:scale-[1.01] ${
-                  clientProduct.stock === 0
-                    ? "bg-zinc-900 text-zinc-600 border-zinc-800 cursor-not-allowed"
-                    : "bg-zinc-50 text-zinc-950 hover:bg-zinc-200 border-zinc-300 cursor-pointer shadow-lg hover:shadow-zinc-50/5"
-                }`}
-              >
-                {clientProduct.stock === 0 ? "Temporarily Unavailable" : "🛒 Add to Shopping Cart"}
-              </button>
+              {session?.user?.role === "ADMIN" ? (
+                <Link
+                  href={`/admin/products/${product.id}/edit`}
+                  className="flex-1 font-bold py-4 px-6 rounded-2xl border transition-all text-sm flex items-center justify-center gap-2 hover:scale-[1.01] bg-indigo-650 hover:bg-indigo-500 text-white border-indigo-500/30 cursor-pointer shadow-lg hover:shadow-indigo-500/5"
+                >
+                  📝 Edit Product Detail
+                </Link>
+              ) : (
+                <button
+                  onClick={handleAddToCart}
+                  disabled={clientProduct.stock === 0}
+                  className={`flex-1 font-bold py-4 px-6 rounded-2xl border transition-all text-sm flex items-center justify-center gap-2 hover:scale-[1.01] ${
+                    clientProduct.stock === 0
+                      ? "bg-zinc-900 text-zinc-600 border-zinc-800 cursor-not-allowed"
+                      : "bg-zinc-50 text-zinc-950 hover:bg-zinc-200 border-zinc-300 cursor-pointer shadow-lg hover:shadow-zinc-50/5"
+                  }`}
+                >
+                  {clientProduct.stock === 0 ? "Temporarily Unavailable" : "🛒 Add to Shopping Cart"}
+                </button>
+              )}
             </div>
 
           </div>

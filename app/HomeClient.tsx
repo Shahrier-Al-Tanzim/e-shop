@@ -67,8 +67,8 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
   // Perform multi-dimensional client-side queries
   const filteredProducts = initialProducts.filter(product => {
     const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
-    const matchesSearch = 
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    const matchesSearch =
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
@@ -124,7 +124,7 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-50 flex flex-col font-sans relative">
-      
+
       {/* Decorative Glow Elements */}
       <div className="absolute top-[-10%] left-[20%] w-[500px] h-[500px] rounded-full bg-indigo-900/10 blur-[120px] pointer-events-none animate-pulse-slow"></div>
       <div className="absolute bottom-[20%] right-[10%] w-[400px] h-[400px] rounded-full bg-violet-900/10 blur-[100px] pointer-events-none animate-pulse-slow"></div>
@@ -151,7 +151,7 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
           </div>
 
           <div className="flex items-center gap-4">
-            <button 
+            <button
               onClick={() => toggleDrawer(true)}
               className="relative p-2 rounded-lg bg-zinc-900/80 hover:bg-zinc-800/80 border border-zinc-800 transition-all group cursor-pointer"
             >
@@ -162,35 +162,35 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
                 </span>
               )}
             </button>
-            
+
             {isLoggedIn ? (
               <div className="flex items-center gap-3">
                 <span className="text-xs text-zinc-400 font-medium hidden md:inline-flex items-center gap-1.5">
-                  Hi, {session?.user?.name || "Customer"} 
+                  Hi, {session?.user?.name || "Customer"}
                   {session?.user?.role === "ADMIN" && (
                     <span className="text-[9px] uppercase tracking-wider bg-indigo-500/10 text-indigo-400 px-1.5 py-0.5 rounded border border-indigo-500/20 font-bold">
                       Admin
                     </span>
                   )}
                 </span>
-                
+
                 {session?.user?.role === "ADMIN" ? (
-                  <Link 
-                    href="/admin" 
+                  <Link
+                    href="/admin"
                     className="inline-flex text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-2 rounded-lg transition-colors border border-indigo-500/30 cursor-pointer"
                   >
                     Admin Panel
                   </Link>
                 ) : (
-                  <Link 
-                    href="/profile" 
+                  <Link
+                    href="/profile"
                     className="inline-flex text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 text-zinc-300 px-3.5 py-2 rounded-lg border border-zinc-800 transition-colors cursor-pointer"
                   >
-                    My Orders
+                    Profile & Orders
                   </Link>
                 )}
 
-                <button 
+                <button
                   onClick={() => signOut({ callbackUrl: "/" })}
                   className="text-xs text-zinc-400 hover:text-red-400 transition-colors cursor-pointer px-2 py-2"
                 >
@@ -198,8 +198,8 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
                 </button>
               </div>
             ) : (
-              <Link 
-                href="/login" 
+              <Link
+                href="/login"
                 className="inline-flex text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg transition-colors border border-indigo-500/30 cursor-pointer"
               >
                 Sign In
@@ -211,7 +211,7 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
 
       {/* Main Content */}
       <main className="flex-1 max-w-7xl mx-auto px-6 py-12 md:py-20 z-10 w-full">
-        
+
         {/* Hero Section */}
         <section className="text-center max-w-2xl mx-auto mb-10 flex flex-col items-center">
           <p className="text-2xl sm:text-4xl font-extrabold tracking-tight mb-3">
@@ -221,8 +221,8 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
             A premium template designed for extreme performance, security, and edge deployments. Scalable to millions of views with Neon serverless PostgreSQL, Stripe Checkout, and a fully cognitive AI Support Assistant.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <a 
-              href="#store" 
+            <a
+              href="#store"
               className="bg-zinc-50 hover:bg-zinc-200 text-zinc-950 font-bold px-4 py-2 rounded-lg text-xs transition-all shadow-lg hover:shadow-zinc-200/10 hover:scale-[1.02]"
             >
               Browse Catalog
@@ -230,14 +230,14 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
           </div>
         </section>
 
-        
+
 
         {/* Store Catalog Section */}
         <section id="store" className="scroll-mt-24 mb-20">
           {/* Search Bar and Category Chips Panel */}
           <div className="glass-panel p-6 rounded-2xl mb-10 space-y-6 shadow-xl">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-              
+
               {/* Search Box */}
               <div className="md:col-span-2 relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">🔍</span>
@@ -257,7 +257,7 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
                   </button>
                 )}
               </div>
-              
+
               {/* Reset Button */}
               <div className="text-right">
                 <span className="text-[10px] uppercase font-bold tracking-widest text-zinc-500 bg-zinc-900/60 border border-zinc-800 px-3 py-1.5 rounded-lg">
@@ -273,11 +273,10 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`text-[10px] uppercase font-black tracking-wider px-3.5 py-2 rounded-xl transition-all cursor-pointer border ${
-                    selectedCategory === cat
+                  className={`text-[10px] uppercase font-black tracking-wider px-3.5 py-2 rounded-xl transition-all cursor-pointer border ${selectedCategory === cat
                       ? "bg-zinc-50 border-zinc-200 text-zinc-950 font-bold scale-[1.01]"
                       : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200"
-                  }`}
+                    }`}
                 >
                   {cat}
                 </button>
@@ -297,14 +296,14 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {filteredProducts.map(product => (
                 <div key={product.id} className="glass-panel rounded-2xl overflow-hidden hover:scale-[1.02] hover:border-indigo-500/40 transition-all duration-300 flex flex-col group h-full shadow-lg">
-                  
+
                   {/* Product Image Panel */}
                   <Link href={`/products/${product.slug}`} className="cursor-pointer block relative select-none overflow-hidden h-48 bg-zinc-950 border-b border-zinc-800/80 flex items-center justify-center text-6xl">
                     {product.image.startsWith("http") || product.image.startsWith("data:image") ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img 
-                        src={product.image} 
-                        alt={product.name} 
+                      <img
+                        src={product.image}
+                        alt={product.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
@@ -329,34 +328,42 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
                       <span className="text-[10px] uppercase font-bold tracking-widest text-zinc-500">
                         {product.category}
                       </span>
-                      
+
                       <Link href={`/products/${product.slug}`} className="cursor-pointer block">
                         <h3 className="font-bold text-white mt-1 group-hover:text-indigo-400 transition-colors truncate">
                           {product.name}
                         </h3>
                       </Link>
-                      
+
                       <div className="flex items-center gap-1 mt-2">
                         <span className="text-xs text-amber-400">★</span>
                         <span className="text-xs text-zinc-300 font-semibold">{product.rating}</span>
                       </div>
                     </div>
-                    
+
                     <div className="mt-5 flex items-center justify-between pt-4 border-t border-zinc-900">
                       <span className="font-extrabold text-white text-lg">
                         ${product.price.toFixed(2)}
                       </span>
-                      <button
-                        onClick={() => handleAddToCart(product)}
-                        disabled={product.stock === 0}
-                        className={`text-xs px-3.5 py-2 rounded-lg font-bold border transition-all ${
-                          product.stock === 0
-                            ? "bg-zinc-900 text-zinc-600 border-zinc-800 cursor-not-allowed"
-                            : "bg-zinc-50 text-zinc-950 hover:bg-zinc-200 border-zinc-300 cursor-pointer shadow-sm"
-                        }`}
-                      >
-                        {product.stock === 0 ? "Unavailable" : "Add to Cart"}
-                      </button>
+                      {session?.user?.role === "ADMIN" ? (
+                        <Link
+                          href={`/admin/products/${product.id}/edit`}
+                          className="text-xs px-3.5 py-2 rounded-lg font-bold border bg-indigo-650 hover:bg-indigo-500 text-white border-indigo-500/30 cursor-pointer shadow-sm transition-all"
+                        >
+                          Edit Product
+                        </Link>
+                      ) : (
+                        <button
+                          onClick={() => handleAddToCart(product)}
+                          disabled={product.stock === 0}
+                          className={`text-xs px-3.5 py-2 rounded-lg font-bold border transition-all ${product.stock === 0
+                              ? "bg-zinc-900 text-zinc-600 border-zinc-800 cursor-not-allowed"
+                              : "bg-zinc-50 text-zinc-950 hover:bg-zinc-200 border-zinc-300 cursor-pointer shadow-sm"
+                            }`}
+                        >
+                          {product.stock === 0 ? "Unavailable" : "Add to Cart"}
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -386,7 +393,7 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
 
       {/* Floating AI Chat Assistant Drawer */}
       <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end">
-        
+
         {/* Chat Toggle Button (Disabled for now) */}
         {/* <button
           onClick={() => setIsChatOpen(!isChatOpen)}
@@ -398,7 +405,7 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
         {/* Chat Window Panel */}
         {isChatOpen && (
           <div className="w-[340px] sm:w-[380px] h-[450px] glass-panel rounded-2xl shadow-2xl mt-4 border border-zinc-800 flex flex-col overflow-hidden animate-fade-in">
-            
+
             {/* Window Header */}
             <div className="px-4 py-3.5 bg-gradient-to-r from-indigo-950/80 to-violet-950/80 border-b border-zinc-800 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -416,18 +423,16 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
             {/* Message Area */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3 flex flex-col bg-zinc-950/50">
               {chatMessages.map(msg => (
-                <div 
+                <div
                   key={msg.id}
-                  className={`max-w-[80%] rounded-xl px-3 py-2 text-xs flex flex-col ${
-                    msg.sender === "assistant"
+                  className={`max-w-[80%] rounded-xl px-3 py-2 text-xs flex flex-col ${msg.sender === "assistant"
                       ? "bg-zinc-900 border border-zinc-800 text-zinc-200 self-start"
                       : "bg-indigo-600 text-white self-end"
-                  }`}
+                    }`}
                 >
                   <p className="leading-relaxed">{msg.text}</p>
-                  <span className={`text-[8px] mt-1 select-none self-end ${
-                    msg.sender === "assistant" ? "text-zinc-500" : "text-indigo-300"
-                  }`}>
+                  <span className={`text-[8px] mt-1 select-none self-end ${msg.sender === "assistant" ? "text-zinc-500" : "text-indigo-300"
+                    }`}>
                     {msg.timestamp}
                   </span>
                 </div>
@@ -443,7 +448,7 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
                 placeholder="Ask about stack, vercel, roadmap..."
                 className="flex-1 bg-zinc-950 border border-zinc-800 text-xs rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500"
               />
-              <button 
+              <button
                 type="submit"
                 className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3.5 py-2 rounded-lg font-bold transition-all cursor-pointer"
               >
