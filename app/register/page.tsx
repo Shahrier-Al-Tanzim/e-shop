@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
@@ -9,6 +9,24 @@ import { registerUser } from "../actions/auth";
 export default function RegisterPage() {
   const [state, formAction, isPending] = useActionState(registerUser, null);
   const router = useRouter();
+
+  // Local Form State
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+
+  // Password Validation Checks
+  const hasMinLength = password.length >= 8;
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasLowercase = /[a-z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSpecialChar = /[^A-Za-z0-9]/.test(password);
+
+  const allConditionsMet = hasMinLength && hasUppercase && hasLowercase && hasNumber && hasSpecialChar;
+  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isNameValid = name.trim().length >= 2;
+  const isFormValid = isNameValid && isEmailValid && allConditionsMet;
 
   useEffect(() => {
     if (state?.success) {
@@ -62,6 +80,8 @@ export default function RegisterPage() {
                 name="name"
                 type="text"
                 required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className="w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-4 py-3 text-sm text-zinc-100 placeholder-zinc-600 outline-none transition-all duration-200 focus:border-indigo-500/80 focus:ring-1 focus:ring-indigo-500/40"
                 placeholder="John Doe"
               />
@@ -76,6 +96,8 @@ export default function RegisterPage() {
                 name="email"
                 type="email"
                 required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-4 py-3 text-sm text-zinc-100 placeholder-zinc-600 outline-none transition-all duration-200 focus:border-indigo-500/80 focus:ring-1 focus:ring-indigo-500/40"
                 placeholder="you@example.com"
               />
@@ -90,14 +112,63 @@ export default function RegisterPage() {
                 name="password"
                 type="password"
                 required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onFocus={() => setIsPasswordFocused(true)}
                 className="w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-4 py-3 text-sm text-zinc-100 placeholder-zinc-600 outline-none transition-all duration-200 focus:border-indigo-500/80 focus:ring-1 focus:ring-indigo-500/40"
-                placeholder="At least 4 characters"
+                placeholder="Strength constraints required"
               />
+              
+              {(isPasswordFocused || password.length > 0) && (
+                <div className="mt-3 p-3 rounded-lg border border-zinc-800/80 bg-zinc-950/50 space-y-1.5 text-xs text-zinc-400 animate-fade-in transition-all">
+                  <p className="font-bold text-[10px] uppercase tracking-wider text-zinc-500 mb-1">Password Strength Checklist:</p>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-sm ${hasMinLength ? "text-emerald-400" : "text-zinc-650"}`}>
+                      {hasMinLength ? "✓" : "○"}
+                    </span>
+                    <span className={hasMinLength ? "text-emerald-400 font-medium animate-pulse" : "text-zinc-500"}>
+                      At least 8 characters long
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-sm ${hasUppercase ? "text-emerald-400" : "text-zinc-650"}`}>
+                      {hasUppercase ? "✓" : "○"}
+                    </span>
+                    <span className={hasUppercase ? "text-emerald-400 font-medium animate-pulse" : "text-zinc-500"}>
+                      At least 1 uppercase letter
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-sm ${hasLowercase ? "text-emerald-400" : "text-zinc-650"}`}>
+                      {hasLowercase ? "✓" : "○"}
+                    </span>
+                    <span className={hasLowercase ? "text-emerald-400 font-medium animate-pulse" : "text-zinc-500"}>
+                      At least 1 lowercase letter
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-sm ${hasNumber ? "text-emerald-400" : "text-zinc-650"}`}>
+                      {hasNumber ? "✓" : "○"}
+                    </span>
+                    <span className={hasNumber ? "text-emerald-400 font-medium animate-pulse" : "text-zinc-500"}>
+                      At least 1 numerical digit
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-sm ${hasSpecialChar ? "text-emerald-400" : "text-zinc-650"}`}>
+                      {hasSpecialChar ? "✓" : "○"}
+                    </span>
+                    <span className={hasSpecialChar ? "text-emerald-400 font-medium animate-pulse" : "text-zinc-500"}>
+                      At least 1 special character (e.g. @, $, !, %, *, ?, &)
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
 
             <button
               type="submit"
-              disabled={isPending || !!state?.success}
+              disabled={isPending || !isFormValid || !!state?.success}
               className="relative w-full overflow-hidden rounded-lg bg-indigo-600 py-3 text-sm font-semibold tracking-wide text-white shadow-lg shadow-indigo-600/20 transition-all duration-200 hover:bg-indigo-500 hover:shadow-indigo-500/30 active:scale-[0.98] disabled:scale-100 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
             >
               {isPending ? (

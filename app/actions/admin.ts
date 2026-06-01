@@ -4,6 +4,15 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import { uploadImage } from "@/lib/cloudinary";
+import { z } from "zod";
+
+const productSchema = z.object({
+  name: z.string().min(3, "Product Name must be at least 3 characters long!").max(100, "Product Name cannot exceed 100 characters!"),
+  description: z.string().min(10, "Description must be at least 10 characters long!").max(1000, "Description cannot exceed 1000 characters!"),
+  price: z.number({ error: "Price must be a valid positive number!" }).gt(0, "Price must be greater than $0!"),
+  stock: z.number({ error: "Stock must be a valid non-negative integer!" }).int("Stock must be an integer!").nonnegative("Stock cannot be negative!"),
+  categoryId: z.string().min(1, "Please select a valid catalog category!"),
+});
 
 // Helper function to verify admin access
 async function verifyAdmin() {
@@ -67,12 +76,17 @@ export async function createProduct(prevState: any, formData: FormData) {
     const price = parseFloat(priceStr);
     const stock = parseInt(stockStr, 10);
 
-    if (isNaN(price) || price < 0) {
-      return { error: "Price must be a valid positive number!" };
-    }
+    // Zod Validation
+    const validationResult = productSchema.safeParse({
+      name,
+      description,
+      price,
+      stock,
+      categoryId,
+    });
 
-    if (isNaN(stock) || stock < 0) {
-      return { error: "Stock must be a valid positive integer!" };
+    if (!validationResult.success) {
+      return { error: validationResult.error.issues[0].message };
     }
 
     // Process image upload
@@ -126,12 +140,17 @@ export async function updateProduct(id: string, prevState: any, formData: FormDa
     const price = parseFloat(priceStr);
     const stock = parseInt(stockStr, 10);
 
-    if (isNaN(price) || price < 0) {
-      return { error: "Price must be a valid positive number!" };
-    }
+    // Zod Validation
+    const validationResult = productSchema.safeParse({
+      name,
+      description,
+      price,
+      stock,
+      categoryId,
+    });
 
-    if (isNaN(stock) || stock < 0) {
-      return { error: "Stock must be a valid positive integer!" };
+    if (!validationResult.success) {
+      return { error: validationResult.error.issues[0].message };
     }
 
     let finalImages: string[] = [];

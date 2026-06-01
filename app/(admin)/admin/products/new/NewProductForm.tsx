@@ -50,6 +50,28 @@ export default function NewProductForm({ categories }: { categories: Category[] 
       return;
     }
 
+    if (name.trim().length < 3) {
+      setError("Product Name must be at least 3 characters long!");
+      return;
+    }
+
+    if (description.trim().length < 10) {
+      setError("Description must be at least 10 characters long!");
+      return;
+    }
+
+    const parsedPrice = parseFloat(price);
+    if (isNaN(parsedPrice) || parsedPrice <= 0) {
+      setError("Price must be greater than $0!");
+      return;
+    }
+
+    const parsedStock = parseInt(stock, 10);
+    if (isNaN(parsedStock) || parsedStock < 0) {
+      setError("Stock cannot be negative!");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("name", name);
     formData.append("price", price);
