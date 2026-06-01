@@ -6,7 +6,7 @@ import CheckoutClient from "./CheckoutClient";
 import prisma from "@/lib/prisma";
 
 export const metadata = {
-  title: "Checkout | Secure AG.ESHOP Funnel",
+  title: "Checkout | Secure E-Shop Funnel",
   description: "Secure invoice checkout funnel for e-shop premium orders.",
 };
 
