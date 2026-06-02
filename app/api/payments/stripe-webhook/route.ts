@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import prisma from "@/lib/prisma";
 import { createNotification } from "@/app/actions/notifications";
-import { sendOrderPlacedEmails, sendOrderStatusUpdateEmail } from "@/lib/mail";
+import { sendOrderPlacedEmails, sendOrderStatusUpdateEmail, sendAdminPaymentReceivedEmail } from "@/lib/mail";
 
 
 export async function POST(req: Request) {
@@ -103,6 +103,7 @@ export async function POST(req: Request) {
           try {
             await sendOrderPlacedEmails(completedOrder.id);
             await sendOrderStatusUpdateEmail(completedOrder.id, "PAID");
+            await sendAdminPaymentReceivedEmail(completedOrder.id);
           } catch (mailErr) {
             console.error("Failed to dispatch Stripe payment emails:", mailErr);
           }

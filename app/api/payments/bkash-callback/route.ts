@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { executeBkashPayment } from "@/app/actions/bkash";
 import { createNotification } from "@/app/actions/notifications";
-import { sendOrderPlacedEmails, sendOrderStatusUpdateEmail } from "@/lib/mail";
+import { sendOrderPlacedEmails, sendOrderStatusUpdateEmail, sendAdminPaymentReceivedEmail } from "@/lib/mail";
 
 export async function GET(req: NextRequest) {
   try {
@@ -127,6 +127,7 @@ export async function GET(req: NextRequest) {
         // Email Alerts
         await sendOrderPlacedEmails(completedOrder.id);
         await sendOrderStatusUpdateEmail(completedOrder.id, "PAID");
+        await sendAdminPaymentReceivedEmail(completedOrder.id);
         
       } catch (notifMailErr) {
         console.error("Failed to trigger post-bKash payment notifications:", notifMailErr);
