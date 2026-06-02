@@ -20,6 +20,14 @@ export default async function ProfilePage() {
   // Fetch the logged-in customer's details and orders from PostgreSQL Neon database
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
+    include: {
+      reviews: {
+        select: {
+          productId: true,
+          rating: true,
+        },
+      },
+    },
   });
 
   const orders = await prisma.order.findMany({
@@ -47,6 +55,7 @@ export default async function ProfilePage() {
       defaultAddress={user.address || ""}
       defaultPhone={user.phone || ""}
       initialOrders={orders} 
+      reviews={user.reviews}
     />
   );
 }

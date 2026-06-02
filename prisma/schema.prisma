@@ -40,6 +40,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   orders    Order[]
+  reviews   Review[]
 }
 
 model Category {
@@ -63,6 +64,7 @@ model Product {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   orderItems  OrderItem[]
+  reviews     Review[]
 }
 
 model Order {
@@ -87,3 +89,19 @@ model OrderItem {
   qty             Int
   priceAtPurchase Float // Captures structural cost at checkout, shielding history from catalog shifts
 }
+
+model Review {
+  id        String   @id @default(uuid())
+  rating    Int      // 1 to 5 stars
+  comment   String
+  images    String[] // Cloudinary URLs
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, productId]) // Enforce one review per user per product
+}
+

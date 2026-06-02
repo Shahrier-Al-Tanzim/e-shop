@@ -37,6 +37,7 @@ interface ProfileClientProps {
   defaultAddress: string;
   defaultPhone: string;
   initialOrders: any[];
+  reviews?: Array<{ productId: string; rating: number }>;
 }
 
 type TabType = "ORDERS" | "SETTINGS";
@@ -49,15 +50,82 @@ export default function ProfileClient({
   defaultAddress,
   defaultPhone,
   initialOrders,
+  reviews = [],
 }: ProfileClientProps) {
   const [orders] = useState<Order[]>(initialOrders as Order[]);
   const [activeTab, setActiveTab] = useState<TabType>("ORDERS");
 
-  // Form Settings states
+  // Review System States
+  const [userReviews, setUserReviews] = useState<Array<{ productId: string; rating: number }>>(reviews);
+  const [activeReviewProduct, setActiveReviewProduct] = useState<{ id: string; name: string; image: string } | null>(null);
+  const [reviewRating, setReviewRating] = useState<number>(5);
+  const [reviewComment, setReviewComment] = useState<string>("");
+  const [reviewImages, setReviewImages] = useState<string[]>([]);
+  const [reviewError, setReviewError] = useState<string>("");
+  const [reviewSuccess, setReviewSuccess] = useState<string>("");
+  const [isReviewSubmitting, setIsReviewSubmitting] = useState<boolean>(false);
+
   const [address, setAddress] = useState(defaultAddress);
   const [phone, setPhone] = useState(defaultPhone);
   const [isPending, startTransition] = useTransition();
   const [statusMsg, setStatusMsg] = useState({ type: "", text: "" });
+
+  const handleReviewImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    // Read files as Base64 strings
+    Array.from(files).forEach((file) => {
+      if (file.size > 20 * 1024 * 1024) {
+        setReviewError("Images must be smaller than 20MB.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setReviewImages((prev) => [...prev, reader.result as string].slice(0, 3)); // Max 3 images
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const submitReviewAction = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeReviewProduct) return;
+    
+    setReviewError("");
+    setReviewSuccess("");
+    setIsReviewSubmitting(true);
+
+    try {
+      const { submitReview } = await import("@/app/actions/review");
+      const formData = new FormData();
+      formData.append("productId", activeReviewProduct.id);
+      formData.append("rating", reviewRating.toString());
+      formData.append("comment", reviewComment);
+      formData.append("images", JSON.stringify(reviewImages));
+
+      const response = await submitReview(null, formData);
+      if (response.error) {
+        setReviewError(response.error);
+      } else {
+        setReviewSuccess(response.success || "Review posted successfully!");
+        // Update local state to show "Reviewed" badge instantly
+        setUserReviews((prev) => [...prev, { productId: activeReviewProduct.id, rating: reviewRating }]);
+        
+        // Reset form after short delay
+        setTimeout(() => {
+          setActiveReviewProduct(null);
+          setReviewComment("");
+          setReviewImages([]);
+          setReviewSuccess("");
+        }, 1500);
+      }
+    } catch (err: any) {
+      setReviewError(err.message || "Failed to submit review. Please try again.");
+    } finally {
+      setIsReviewSubmitting(false);
+    }
+  };
 
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
@@ -310,30 +378,66 @@ export default function ProfileClient({
                           <div className="space-y-3">
                             <h5 className="text-[9px] uppercase font-extrabold tracking-widest text-zinc-500">Ordered Products</h5>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              {order.items.map((item) => (
-                                <div key={item.id} className="flex items-center gap-3 bg-zinc-900/40 border border-zinc-900 p-3 rounded-xl">
-                                  <div className="w-10 h-10 rounded-lg bg-zinc-950 flex items-center justify-center text-xl overflow-hidden shrink-0 border border-zinc-900">
-                                    {item.product?.images?.[0] && (item.product.images[0].startsWith("http") || item.product.images[0].startsWith("data:image")) ? (
-                                      <img src={item.product.images[0]} alt={item.product.name} className="w-full h-full object-cover" />
-                                    ) : (
-                                      item.product?.images?.[0] || "📦"
-                                    )}
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <h6 className="text-[10px] font-bold text-white truncate">{item.product?.name || "Product"}</h6>
-                                    <p className="text-[8px] text-zinc-500 mt-0.5">${item.priceAtPurchase.toFixed(2)} each</p>
-                                  </div>
-                                  <div className="text-right shrink-0">
-                                    <span className="text-[9px] text-zinc-400">Qty: {item.qty}</span>
-                                    <span className="text-[10px] font-bold text-white block">${(item.priceAtPurchase * item.qty).toFixed(2)}</span>
-                                  </div>
-                                </div>
-                              ))}
+                              {order.items.map((item) => {
+                                  const isPaidOrCompleted = ["PAID", "PROCESSING", "SHIPPED", "DELIVERED"].includes(order.status);
+                                  const reviewedProduct = item.product ? userReviews.find((r) => r.productId === item.product!.id) : null;
+
+                                  return (
+                                    <div key={item.id} className="flex flex-col gap-3 bg-zinc-900/40 border border-zinc-900 p-3 rounded-xl">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-lg bg-zinc-950 flex items-center justify-center text-xl overflow-hidden shrink-0 border border-zinc-900">
+                                          {item.product?.images?.[0] && (item.product.images[0].startsWith("http") || item.product.images[0].startsWith("data:image")) ? (
+                                            <img src={item.product.images[0]} alt={item.product.name} className="w-full h-full object-cover" />
+                                          ) : (
+                                            item.product?.images?.[0] || "📦"
+                                          )}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <h6 className="text-[10px] font-bold text-white truncate">{item.product?.name || "Product"}</h6>
+                                          <p className="text-[8px] text-zinc-550 mt-0.5">${item.priceAtPurchase.toFixed(2)} each</p>
+                                        </div>
+                                        <div className="text-right shrink-0">
+                                          <span className="text-[9px] text-zinc-550 block">Qty: {item.qty}</span>
+                                          <span className="text-[10px] font-bold text-white block">${(item.priceAtPurchase * item.qty).toFixed(2)}</span>
+                                        </div>
+                                      </div>
+
+                                      {/* Ratings Submission Triggers */}
+                                      {order.status === "DELIVERED" && item.product && (
+                                        <div className="pt-2 border-t border-zinc-950 flex items-center justify-between">
+                                          {reviewedProduct ? (
+                                            <span className="text-[9px] bg-emerald-950/30 text-emerald-400 border border-emerald-900/20 px-2.5 py-1 rounded-md font-bold flex items-center gap-1">
+                                              Reviewed ({reviewedProduct.rating} ★)
+                                            </span>
+                                          ) : (
+                                            <button
+                                              onClick={() => {
+                                                setReviewError("");
+                                                setReviewSuccess("");
+                                                setReviewComment("");
+                                                setReviewImages([]);
+                                                setReviewRating(5);
+                                                setActiveReviewProduct({
+                                                  id: item.product!.id,
+                                                  name: item.product!.name,
+                                                  image: item.product!.images[0] || "📦",
+                                                });
+                                              }}
+                                              className="text-[9px] bg-indigo-600/90 hover:bg-indigo-500 text-white font-bold px-3 py-1.5 rounded-lg border border-indigo-500/20 transition-all cursor-pointer"
+                                            >
+                                              ★ Write a Review
+                                            </button>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
                             </div>
                           </div>
 
                           {/* Footer parameters */}
-                          <div className="text-[9px] text-zinc-500 border-t border-zinc-900/70 pt-4 leading-relaxed flex flex-wrap gap-x-6 gap-y-1">
+                          <div className="text-[9px] text-zinc-550 border-t border-zinc-900/70 pt-4 leading-relaxed flex flex-wrap gap-x-6 gap-y-1">
                             <span>💳 Payment: <strong className="text-zinc-400 uppercase font-mono font-bold">{order.paymentMethod}</strong></span>
                             <span>📍 Address: <strong className="text-zinc-400 font-bold">{order.address}</strong></span>
                           </div>
@@ -345,6 +449,139 @@ export default function ProfileClient({
                 )}
               </div>
             )}
+
+            {/* Modal Review Submission Form overlay */}
+            {activeReviewProduct && (
+              <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
+                <div className="glass-panel max-w-md w-full p-6 rounded-3xl border border-zinc-800 shadow-2xl relative animate-fade-in space-y-6">
+                  
+                  {/* Modal Header */}
+                  <div className="flex items-center justify-between pb-3 border-b border-zinc-900">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-zinc-950 flex items-center justify-center border border-zinc-850 overflow-hidden text-lg shrink-0">
+                        {activeReviewProduct.image.startsWith("http") || activeReviewProduct.image.startsWith("data:image") ? (
+                          <img src={activeReviewProduct.image} alt={activeReviewProduct.name} className="w-full h-full object-cover" />
+                        ) : (
+                          activeReviewProduct.image
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-bold text-white truncate max-w-[200px]">Review: {activeReviewProduct.name}</h3>
+                        <p className="text-[9px] text-zinc-550">Share your rating and upload photos</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setActiveReviewProduct(null)}
+                      className="text-zinc-500 hover:text-white transition-colors cursor-pointer text-sm font-bold"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  {/* Form Messages */}
+                  {reviewError && (
+                    <div className="p-3 bg-red-950/20 border border-red-900/35 text-red-400 text-xs rounded-xl font-bold">
+                      ⚠️ {reviewError}
+                    </div>
+                  )}
+
+                  {reviewSuccess && (
+                    <div className="p-3 bg-emerald-950/20 border border-emerald-900/30 text-emerald-450 text-xs rounded-xl font-bold">
+                      ✓ {reviewSuccess}
+                    </div>
+                  )}
+
+                  {/* Review inputs Form */}
+                  <form onSubmit={submitReviewAction} className="space-y-4">
+                    
+                    {/* Star Rating select */}
+                    <div className="space-y-2">
+                      <label className="block text-[9px] uppercase font-bold tracking-widest text-zinc-550">Product Rating</label>
+                      <div className="flex gap-2">
+                        {[1, 2, 3, 4, 5].map((starVal) => (
+                          <button
+                            key={starVal}
+                            type="button"
+                            onClick={() => setReviewRating(starVal)}
+                            className="text-2xl hover:scale-110 active:scale-95 transition-transform cursor-pointer"
+                          >
+                            <span className={starVal <= reviewRating ? "text-amber-400" : "text-zinc-800"}>★</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Feedback comment input */}
+                    <div className="space-y-2">
+                      <label className="block text-[9px] uppercase font-bold tracking-widest text-zinc-550">Comment Feedback</label>
+                      <textarea
+                        value={reviewComment}
+                        onChange={(e) => setReviewComment(e.target.value)}
+                        placeholder="What did you think of the design, build quality, and value?"
+                        rows={4}
+                        required
+                        className="w-full bg-zinc-950 border border-zinc-855 text-xs rounded-xl px-4.5 py-3 text-white focus:outline-none focus:border-indigo-500"
+                      />
+                    </div>
+
+                    {/* Review Photo Upload */}
+                    <div className="space-y-2">
+                      <label className="block text-[9px] uppercase font-bold tracking-widest text-zinc-550">Upload Photos (Max 3)</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleReviewImageChange}
+                        disabled={reviewImages.length >= 3}
+                        className="w-full bg-zinc-950 text-xs text-zinc-400 border border-zinc-855 rounded-xl file:bg-zinc-900 file:border-0 file:text-white file:text-xs file:font-semibold file:px-4 file:py-2.5 file:cursor-pointer hover:file:bg-zinc-800 cursor-pointer"
+                      />
+
+                      {/* Display thumbnail previews of base64 loaded images */}
+                      {reviewImages.length > 0 && (
+                        <div className="flex gap-2 pt-2">
+                          {reviewImages.map((imgBase64, idx) => (
+                            <div key={idx} className="relative w-12 h-12 rounded-lg border border-zinc-800 overflow-hidden bg-zinc-950 shrink-0">
+                              <img src={imgBase64} alt="Upload preview" className="w-full h-full object-cover" />
+                              <button
+                                type="button"
+                                onClick={() => setReviewImages((prev) => prev.filter((_, i) => i !== idx))}
+                                className="absolute -top-1 -right-1 bg-red-650 hover:bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[8px] font-bold cursor-pointer"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Submit buttons */}
+                    <div className="flex gap-3 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setActiveReviewProduct(null)}
+                        className="flex-1 bg-zinc-900 hover:bg-zinc-800 text-zinc-350 text-xs font-bold py-3 rounded-xl border border-zinc-800 cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isReviewSubmitting || reviewComment.trim().length < 3}
+                        className={`flex-1 text-xs font-bold py-3 rounded-xl border transition-all ${
+                          isReviewSubmitting || reviewComment.trim().length < 3
+                            ? "bg-zinc-900 text-zinc-650 border-zinc-800 cursor-not-allowed"
+                            : "bg-indigo-600 hover:bg-indigo-500 text-white border-indigo-500 cursor-pointer"
+                        }`}
+                      >
+                        {isReviewSubmitting ? "Uploading..." : "Post Review"}
+                      </button>
+                    </div>
+
+                  </form>
+                </div>
+              </div>
+            )}
+
 
             {/* General Settings Panel */}
             {activeTab === "SETTINGS" && (

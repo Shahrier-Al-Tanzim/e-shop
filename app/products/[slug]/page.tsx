@@ -41,5 +41,5 @@ export default async function ProductDetailsPage({ params }: Props) {
     notFound();
   }
 
-  return <ProductDetailsClient product={product} />;
+  return <ProductDetailsClient product={product as any} />;
 }

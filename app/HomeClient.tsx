@@ -336,8 +336,14 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
                       </Link>
 
                       <div className="flex items-center gap-1 mt-2">
-                        <span className="text-xs text-amber-400">★</span>
-                        <span className="text-xs text-zinc-300 font-semibold">{product.rating}</span>
+                        {product.rating > 0 ? (
+                          <>
+                            <span className="text-xs text-amber-400">★</span>
+                            <span className="text-xs text-zinc-300 font-semibold">{product.rating}</span>
+                          </>
+                        ) : (
+                          <span className="text-[10px] text-zinc-500 font-bold">No reviews yet</span>
+                        )}
                       </div>
                     </div>
 

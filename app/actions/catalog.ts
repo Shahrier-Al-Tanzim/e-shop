@@ -16,6 +16,18 @@ export async function getActiveProductBySlug(slug: string) {
             name: true,
           },
         },
+        reviews: {
+          include: {
+            user: {
+              select: {
+                name: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        },
       },
     });
 
