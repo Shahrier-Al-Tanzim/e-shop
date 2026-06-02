@@ -42,6 +42,11 @@ export default async function ProfilePage() {
     },
   });
 
+  const notifications = await prisma.notification.findMany({
+    where: { userId: session.user.id, isAdmin: false },
+    orderBy: { createdAt: "desc" },
+  });
+
   if (!user) {
     redirect("/login?callbackUrl=/profile");
   }
@@ -56,6 +61,7 @@ export default async function ProfilePage() {
       defaultPhone={user.phone || ""}
       initialOrders={orders} 
       reviews={user.reviews}
+      initialNotifications={notifications}
     />
   );
 }
