@@ -83,6 +83,17 @@ export default function ProductDetailsClient({ product }: { product: Product }) 
     ? parseFloat((product.reviews!.reduce((acc, r) => acc + r.rating, 0) / reviewsCount).toFixed(1))
     : 0;
 
+  // Compute rating breakdown count for each star rating (1 to 5)
+  const starCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+  if (product.reviews) {
+    product.reviews.forEach((r) => {
+      const roundedRating = Math.round(r.rating);
+      if (roundedRating >= 1 && roundedRating <= 5) {
+        starCounts[roundedRating as 1 | 2 | 3 | 4 | 5]++;
+      }
+    });
+  }
+
   // Map product to client-safe representation
   const clientProduct: ClientProduct = {
     id: product.id,
@@ -413,6 +424,44 @@ export default function ProductDetailsClient({ product }: { product: Product }) 
             <h2 className="text-2xl font-black text-white">Customer Reviews</h2>
             <p className="text-xs text-zinc-500">Read verified buyer insights and community impressions.</p>
           </div>
+
+          {reviewsCount > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+              <div className="glass-panel p-6 rounded-2xl border border-zinc-900 shadow-xl flex flex-col justify-center items-center text-center">
+                <span className="text-5xl font-black text-white">{averageRating}</span>
+                <div className="flex gap-0.5 mt-2">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <span key={i} className={`text-sm ${i < Math.round(averageRating) ? "text-amber-400" : "text-zinc-800"}`}>
+                      ★
+                    </span>
+                  ))}
+                </div>
+                <span className="text-xs text-zinc-500 mt-2">{reviewsCount} {reviewsCount === 1 ? 'rating' : 'ratings'} total</span>
+              </div>
+              <div className="md:col-span-2 glass-panel p-6 rounded-2xl border border-zinc-900 shadow-xl flex flex-col justify-center">
+                <div className="space-y-2">
+                  {[5, 4, 3, 2, 1].map((stars) => {
+                    const count = starCounts[stars as 1 | 2 | 3 | 4 | 5] || 0;
+                    const percentage = reviewsCount > 0 ? (count / reviewsCount) * 100 : 0;
+                    return (
+                      <div key={stars} className="flex items-center gap-3 text-xs">
+                        <span className="w-12 text-zinc-400 font-semibold flex items-center gap-0.5 justify-end select-none">
+                          {stars} <span className="text-amber-400 text-[10px]">★</span>
+                        </span>
+                        <div className="flex-1 h-2 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800/80">
+                          <div
+                            className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full transition-all duration-500"
+                            style={{ width: `${percentage}%` }}
+                          ></div>
+                        </div>
+                        <span className="w-8 text-zinc-500 text-right font-medium">{count}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
 
           {!product.reviews || product.reviews.length === 0 ? (
             <div className="glass-panel p-10 rounded-2xl text-center border border-zinc-900 shadow-xl">
