@@ -6,6 +6,17 @@ import { useSession, signOut } from "next-auth/react";
 import { useCartStore } from "@/lib/store/useCartStore";
 import CartDrawer from "@/components/CartDrawer";
 
+interface Review {
+  id: string;
+  rating: number;
+  comment: string;
+  images: string[];
+  createdAt: Date | string;
+  user: {
+    name: string | null;
+  };
+}
+
 interface Product {
   id: string;
   name: string;
@@ -17,6 +28,7 @@ interface Product {
   category: {
     name: string;
   };
+  reviews?: Review[];
 }
 
 interface Message {
@@ -46,11 +58,12 @@ export default function ProductDetailsClient({ product }: { product: Product }) 
     {
       id: "1",
       sender: "assistant",
-      text: `Hi there! I am your E-Shop Assistant. Do you have any questions about the ${product.name}? It belongs to our ${product.category?.name} department and is available for $${product.price.toFixed(2)}!`,
+      text: `Hi there! I am your E Shop Assistant. Do you have any questions about the ${product.name}? It belongs to our ${product.category?.name} department and is available for $${product.price.toFixed(2)}!`,
       timestamp: "03:00 AM"
     }
   ]);
   const [userInput, setUserInput] = useState("");
+  const [selectedReviewImage, setSelectedReviewImage] = useState<string | null>(null);
 
   // Hydration Mount State
   const [isMounted, setIsMounted] = useState(false);
@@ -63,6 +76,12 @@ export default function ProductDetailsClient({ product }: { product: Product }) 
   const toggleDrawer = useCartStore((state) => state.toggleDrawer);
   const cartCount = useCartStore((state) => state.getCartCount());
 
+  // Compute average rating
+  const reviewsCount = product.reviews?.length || 0;
+  const averageRating = reviewsCount > 0
+    ? parseFloat((product.reviews!.reduce((acc, r) => acc + r.rating, 0) / reviewsCount).toFixed(1))
+    : 0;
+
   // Map product to client-safe representation
   const clientProduct: ClientProduct = {
     id: product.id,
@@ -70,7 +89,7 @@ export default function ProductDetailsClient({ product }: { product: Product }) 
     price: product.price,
     category: product.category?.name || "Uncategorized",
     image: product.images[0] || "📦",
-    rating: 4.8,
+    rating: averageRating > 0 ? averageRating : 5.0,
     stock: product.stock
   };
 
@@ -267,10 +286,18 @@ export default function ProductDetailsClient({ product }: { product: Product }) 
               {clientProduct.name}
             </h1>
 
-            {/* Ratings Placeholder */}
+            {/* Ratings Block */}
             <div className="flex items-center gap-1">
-              <span className="text-sm text-amber-400">★ ★ ★ ★ ★</span>
-              <span className="text-xs font-semibold text-zinc-400 ml-2">4.8 Rating (34 client reviews)</span>
+              <span className="text-sm text-amber-400">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <span key={i} className={i < Math.round(clientProduct.rating) ? "text-amber-400" : "text-zinc-700"}>
+                    ★
+                  </span>
+                ))}
+              </span>
+              <span className="text-xs font-semibold text-zinc-400 ml-2">
+                {reviewsCount > 0 ? `${clientProduct.rating} Rating (${reviewsCount} customer reviews)` : "No reviews yet"}
+              </span>
             </div>
 
             {/* Pricing Block */}
@@ -316,7 +343,92 @@ export default function ProductDetailsClient({ product }: { product: Product }) 
 
         </div>
 
+        {/* Reviews Section */}
+        <div className="mt-20 border-t border-zinc-900 pt-16">
+          <div className="flex flex-col gap-1 mb-8">
+            <h2 className="text-2xl font-black text-white">Customer Reviews</h2>
+            <p className="text-xs text-zinc-500">Read verified buyer insights and community impressions.</p>
+          </div>
+
+          {!product.reviews || product.reviews.length === 0 ? (
+            <div className="glass-panel p-10 rounded-2xl text-center border border-zinc-900 shadow-xl">
+              <span className="text-3xl mb-3 block select-none">💬</span>
+              <h3 className="text-sm font-bold text-zinc-405">No Reviews Written Yet</h3>
+              <p className="text-xs text-zinc-550 mt-1 max-w-xs mx-auto">
+                Be the first to review this product after completing your invoice fulfillment!
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {product.reviews.map((rev) => (
+                <div key={rev.id} className="glass-panel p-6 rounded-2xl border border-zinc-900 shadow-xl flex flex-col justify-between">
+                  <div>
+                    {/* User & Rating */}
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <span className="text-xs font-bold text-zinc-250 block">{rev.user.name || "Verified Customer"}</span>
+                        <span className="text-[10px] text-zinc-550 block">
+                          {new Date(rev.createdAt).toLocaleDateString([], {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                        </span>
+                      </div>
+                      <div className="flex gap-0.5">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <span key={i} className={`text-xs ${i < rev.rating ? "text-amber-400" : "text-zinc-800"}`}>
+                            ★
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Review text */}
+                    <p className="text-xs text-zinc-400 mt-4 leading-relaxed italic">
+                      "{rev.comment}"
+                    </p>
+                  </div>
+
+                  {/* Review photos */}
+                  {rev.images && rev.images.length > 0 && (
+                    <div className="flex gap-2.5 mt-4 pt-4 border-t border-zinc-950">
+                      {rev.images.map((imgUrl, i) => (
+                        <div
+                          key={i}
+                          onClick={() => setSelectedReviewImage(imgUrl)}
+                          className="w-12 h-12 rounded-lg bg-zinc-900 border border-zinc-800 overflow-hidden cursor-pointer hover:border-indigo-500 transition-all active:scale-95 shrink-0"
+                        >
+                          <img src={imgUrl} alt="Review attachment" className="w-full h-full object-cover" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
       </main>
+
+      {/* Review Image Modal Overlay */}
+      {selectedReviewImage && (
+        <div
+          onClick={() => setSelectedReviewImage(null)}
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-6 cursor-zoom-out animate-fade-in"
+        >
+          <div className="relative max-w-4xl max-h-[85vh] overflow-hidden rounded-xl">
+            <img src={selectedReviewImage} alt="Expanded review photo" className="object-contain max-h-[85vh] rounded-lg" />
+            <button
+              onClick={() => setSelectedReviewImage(null)}
+              className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center font-bold text-lg cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="border-t border-zinc-900 bg-zinc-950 px-6 py-12 text-center text-sm text-zinc-500 z-10">
