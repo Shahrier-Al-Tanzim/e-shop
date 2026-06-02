@@ -223,9 +223,18 @@ export async function sendOrderPlacedEmails(orderId: string) {
       )
       .join("");
 
+    let statusBadgeClass = "badge-pending";
+    switch (order.status) {
+      case "PAID": statusBadgeClass = "badge-paid"; break;
+      case "PROCESSING": statusBadgeClass = "badge-processing"; break;
+      case "SHIPPED": statusBadgeClass = "badge-shipped"; break;
+      case "DELIVERED": statusBadgeClass = "badge-delivered"; break;
+      case "CANCELLED": statusBadgeClass = "badge-cancelled"; break;
+    }
+
     const customerContent = `
       <h1>Thank you for your order, ${customerName}!</h1>
-      <p>Your order <strong>#${order.id}</strong> has been successfully received and is currently in status <span class="badge badge-pending">PENDING</span>.</p>
+      <p>Your order <strong>#${order.id}</strong> has been successfully received and is currently in status <span class="badge ${statusBadgeClass}">${order.status}</span>.</p>
       
       <div class="table-container">
         <table>
@@ -399,3 +408,81 @@ export async function sendOrderStatusUpdateEmail(orderId: string, status: string
     console.error("sendOrderStatusUpdateEmail failed:", error);
   }
 }
+
+// 3. Send Payment Received Alert to Admins
+export async function sendAdminPaymentReceivedEmail(orderId: string) {
+  try {
+    const order = await getOrderDetails(orderId);
+    if (!order) return;
+
+    const customerEmail = order.user?.email || "Guest";
+    const customerName = order.user?.name || "Valued Customer";
+
+    const admins = await prisma.user.findMany({
+      where: { role: "ADMIN" },
+      select: { email: true },
+    });
+    const adminEmails = Array.from(new Set([adminFallbackEmail, ...admins.map((a) => a.email)]));
+
+    const subject = `💳 Payment Verified: Order #${order.id.substring(0, 8)}`;
+    const itemsRows = order.items
+      .map(
+        (item) => `
+      <tr>
+        <td>${item.product?.name || "Product"}</td>
+        <td style="text-align: center;">${item.qty}</td>
+        <td style="text-align: right;">$${item.priceAtPurchase.toFixed(2)}</td>
+        <td style="text-align: right;">$${(item.priceAtPurchase * item.qty).toFixed(2)}</td>
+      </tr>`
+      )
+      .join("");
+
+    const content = `
+      <h1>Payment Received Successfully!</h1>
+      <p>A payment totaling <strong>$${order.total.toFixed(2)}</strong> has been verified for order <strong>#${order.id}</strong>.</p>
+      <p><strong>Customer details:</strong> ${customerName} (${customerEmail})</p>
+      <p><strong>Payment channel:</strong> ${order.paymentMethod}</p>
+      <p><strong>Shipping destination:</strong> ${order.address}</p>
+      
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th style="text-align: center;">Qty</th>
+              <th style="text-align: right;">Price</th>
+              <th style="text-align: right;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsRows}
+            <tr class="total-row">
+              <td colspan="3" style="text-align: right;">Grand Total:</td>
+              <td style="text-align: right;">$${order.total.toFixed(2)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <p style="margin-top: 24px;">Please prepare this order for shipping as the payment has been confirmed.</p>
+    `;
+
+    const html = getEmailWrapper(content, `Payment confirmed for order #${order.id.substring(0, 8)} totaling $${order.total.toFixed(2)}.`);
+
+    for (const email of adminEmails) {
+      if (transporter) {
+        await transporter.sendMail({
+          from: fromAddress,
+          to: email,
+          subject,
+          html,
+        });
+      } else {
+        logEmailFallback(email, subject, html);
+      }
+    }
+  } catch (error) {
+    console.error("sendAdminPaymentReceivedEmail failed:", error);
+  }
+}
+

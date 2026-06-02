@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { executeBkashPayment } from "@/app/actions/bkash";
 import { createNotification } from "@/app/actions/notifications";
-import { sendOrderPlacedEmails, sendOrderStatusUpdateEmail } from "@/lib/mail";
+import { sendOrderPlacedEmails, sendOrderStatusUpdateEmail, sendAdminPaymentReceivedEmail } from "@/lib/mail";
 
 export async function GET(req: NextRequest) {
   try {
@@ -19,25 +19,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(`${origin}/checkout?error=bkash_invalid`);
     }
 
-    if (status !== "success" || !paymentId) {
-      console.log(`bKash payment non-success callback state: Status=${status}, PaymentId=${paymentId}`);
-      
-      // Update order status to CANCELLED in database to unlock product holds if cancelled/failed
-      try {
-        await prisma.order.update({
-          where: { id: orderId },
-          data: { status: "CANCELLED" },
-        });
-      } catch (dbErr) {
-        console.error("Failed to cancel order on callback abort:", dbErr);
-      }
-
-      return NextResponse.redirect(`${origin}/checkout?error=bkash_cancelled`);
-    }
-
-    console.log(`Processing successful bKash payment verification for order: ${orderId}, PaymentID: ${paymentId}`);
-
-    // Check database first to prevent duplicate callbacks from failing
+    // Check database first to prevent duplicate callbacks or status mismatch redirects from failing
     const existingOrder = await prisma.order.findUnique({
       where: { id: orderId },
     });
@@ -46,6 +28,26 @@ export async function GET(req: NextRequest) {
       console.log(`Order ${orderId} is already marked as PAID. Redirecting to success page.`);
       return NextResponse.redirect(`${origin}/checkout/success?orderId=${orderId}`);
     }
+
+    if (status !== "success" || !paymentId) {
+      console.log(`bKash payment non-success callback state: Status=${status}, PaymentId=${paymentId}`);
+      
+      // Update order status to CANCELLED in database to unlock product holds if cancelled/failed (only if not already paid/processed)
+      if (existingOrder && existingOrder.status !== "PAID") {
+        try {
+          await prisma.order.update({
+            where: { id: orderId },
+            data: { status: "CANCELLED" },
+          });
+        } catch (dbErr) {
+          console.error("Failed to cancel order on callback abort:", dbErr);
+        }
+      }
+
+      return NextResponse.redirect(`${origin}/checkout?error=bkash_cancelled`);
+    }
+
+    console.log(`Processing successful bKash payment verification for order: ${orderId}, PaymentID: ${paymentId}`);
 
     // 1. Verify/Execute the payment via bKash API
     const verification = await executeBkashPayment(paymentId);
@@ -124,9 +126,10 @@ export async function GET(req: NextRequest) {
           );
         }
 
-        // Email Alerts
-        await sendOrderPlacedEmails(completedOrder.id);
-        await sendOrderStatusUpdateEmail(completedOrder.id, "PAID");
+        // Email Alerts (Non-blocking background execution)
+        sendOrderPlacedEmails(completedOrder.id).catch(err => console.error("bKash order placement mail failed:", err));
+        sendOrderStatusUpdateEmail(completedOrder.id, "PAID").catch(err => console.error("bKash payment confirmation mail failed:", err));
+        sendAdminPaymentReceivedEmail(completedOrder.id).catch(err => console.error("bKash admin payment alert failed:", err));
         
       } catch (notifMailErr) {
         console.error("Failed to trigger post-bKash payment notifications:", notifMailErr);

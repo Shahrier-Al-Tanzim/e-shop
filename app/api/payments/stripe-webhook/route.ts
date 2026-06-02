@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import prisma from "@/lib/prisma";
 import { createNotification } from "@/app/actions/notifications";
-import { sendOrderPlacedEmails, sendOrderStatusUpdateEmail } from "@/lib/mail";
+import { sendOrderPlacedEmails, sendOrderStatusUpdateEmail, sendAdminPaymentReceivedEmail } from "@/lib/mail";
 
 
 export async function POST(req: Request) {
@@ -99,13 +99,10 @@ export async function POST(req: Request) {
             console.error("Failed to trigger Stripe notifications:", notiErr);
           }
 
-          // Trigger email updates for customer and admins
-          try {
-            await sendOrderPlacedEmails(completedOrder.id);
-            await sendOrderStatusUpdateEmail(completedOrder.id, "PAID");
-          } catch (mailErr) {
-            console.error("Failed to dispatch Stripe payment emails:", mailErr);
-          }
+          // Trigger email updates for customer and admins (Non-blocking background execution)
+          sendOrderPlacedEmails(completedOrder.id).catch(err => console.error("Stripe order placement mail failed:", err));
+          sendOrderStatusUpdateEmail(completedOrder.id, "PAID").catch(err => console.error("Stripe payment confirmation mail failed:", err));
+          sendAdminPaymentReceivedEmail(completedOrder.id).catch(err => console.error("Stripe admin payment alert failed:", err));
         }
       } catch (dbError: any) {
         console.error(`Database transaction error inside webhook: ${dbError.message}`);

@@ -5,6 +5,8 @@ import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { updateCustomerProfile } from "@/app/actions/profile";
 
+import type { OrderStatus, PaymentMethod } from "@prisma/client";
+
 interface Product {
   id: string;
   name: string;
@@ -21,8 +23,8 @@ interface OrderItem {
 
 interface Order {
   id: string;
-  status: "PENDING" | "PAID" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
-  paymentMethod: "STRIPE" | "COD";
+  status: OrderStatus;
+  paymentMethod: PaymentMethod;
   total: number;
   address: string;
   createdAt: Date;
