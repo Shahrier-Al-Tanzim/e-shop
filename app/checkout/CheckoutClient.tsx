@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCartStore } from "@/lib/store/useCartStore";
 import { createCodOrder, createStripeSession } from "@/app/actions/checkout";
+import { createBkashPayment } from "@/app/actions/bkash";
 
 interface CheckoutClientProps {
   userEmail: string;
@@ -25,7 +26,7 @@ export default function CheckoutClient({
 
   const [address, setAddress] = useState(defaultAddress);
   const [phone, setPhone] = useState(defaultPhone);
-  const [paymentMethod, setPaymentMethod] = useState<"STRIPE" | "COD">("STRIPE");
+  const [paymentMethod, setPaymentMethod] = useState<"STRIPE" | "COD" | "BKASH">("STRIPE");
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -37,6 +38,10 @@ export default function CheckoutClient({
     const err = searchParams.get("error");
     if (err === "payment_cancelled") {
       setErrorMsg("Your card transaction was cancelled. You can choose COD or try again.");
+    } else if (err === "bkash_cancelled") {
+      setErrorMsg("Your bKash transaction was cancelled. You can choose another method or try again.");
+    } else if (err === "bkash_failed") {
+      setErrorMsg("bKash payment verification failed. Please try again.");
     }
   }, [searchParams]);
 
@@ -68,6 +73,16 @@ export default function CheckoutClient({
         window.location.href = res.url;
       } else {
         setErrorMsg(res.error || "Failed to create Stripe payment session.");
+        setIsLoading(false);
+      }
+    } else if (paymentMethod === "BKASH") {
+      setLoadingMessage("Opening secure bKash payment gateway...");
+      const res = await createBkashPayment(address, phone, items);
+      if (res.success && res.url) {
+        // Redirect to bKash Hosted Checkout
+        window.location.href = res.url;
+      } else {
+        setErrorMsg(res.error || "Failed to create bKash payment.");
         setIsLoading(false);
       }
     } else {
@@ -238,6 +253,31 @@ export default function CheckoutClient({
                     </span>
                   </label>
 
+                  {/* bKash Payment Selection */}
+                  <label 
+                    className={`flex flex-col p-4 rounded-2xl border transition-all cursor-pointer select-none ${
+                      paymentMethod === "BKASH"
+                        ? "bg-indigo-950/20 border-indigo-550/80 text-white shadow-lg shadow-indigo-500/5"
+                        : "bg-zinc-900/30 border-zinc-850 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-900/50"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between font-bold text-xs">
+                      <span className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="payment"
+                          checked={paymentMethod === "BKASH"}
+                          onChange={() => setPaymentMethod("BKASH")}
+                          className="text-indigo-550"
+                        />
+                        📢 bKash Wallet
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-zinc-500 mt-2 leading-relaxed">
+                      Pay securely using bKash Tokenized checkout redirect (OTP/PIN required).
+                    </span>
+                  </label>
+
                 </div>
 
                 <div className="pt-4">
@@ -246,7 +286,7 @@ export default function CheckoutClient({
                     disabled={isLoading}
                     className="w-full bg-zinc-50 hover:bg-zinc-200 text-zinc-950 font-black py-4.5 rounded-2xl transition-all shadow-lg hover:scale-[1.01] cursor-pointer text-sm flex items-center justify-center gap-2 disabled:bg-zinc-800 disabled:text-zinc-500 disabled:cursor-not-allowed border border-zinc-200/20"
                   >
-                    {paymentMethod === "STRIPE" ? "🔒 Proceed to Stripe Gateway" : "📝 Place COD Transaction"}
+                    {paymentMethod === "STRIPE" ? "🔒 Proceed to Stripe Gateway" : paymentMethod === "BKASH" ? "📢 Open bKash Checkout" : "📝 Place COD Transaction"}
                   </button>
                 </div>
               </form>
