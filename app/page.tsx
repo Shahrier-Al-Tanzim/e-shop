@@ -49,6 +49,7 @@ export default async function HomePage() {
       image: product.images[0] || "📦",
       rating: averageRating,
       stock: product.stock,
+      reviewsCount,
     };
   });
 

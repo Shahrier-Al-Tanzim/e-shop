@@ -64,6 +64,7 @@ export default function ProductDetailsClient({ product }: { product: Product }) 
   ]);
   const [userInput, setUserInput] = useState("");
   const [selectedReviewImage, setSelectedReviewImage] = useState<string | null>(null);
+  const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
 
   // Hydration Mount State
   const [isMounted, setIsMounted] = useState(false);
@@ -81,6 +82,17 @@ export default function ProductDetailsClient({ product }: { product: Product }) 
   const averageRating = reviewsCount > 0
     ? parseFloat((product.reviews!.reduce((acc, r) => acc + r.rating, 0) / reviewsCount).toFixed(1))
     : 0;
+
+  // Compute rating breakdown count for each star rating (1 to 5)
+  const starCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+  if (product.reviews) {
+    product.reviews.forEach((r) => {
+      const roundedRating = Math.round(r.rating);
+      if (roundedRating >= 1 && roundedRating <= 5) {
+        starCounts[roundedRating as 1 | 2 | 3 | 4 | 5]++;
+      }
+    });
+  }
 
   // Map product to client-safe representation
   const clientProduct: ClientProduct = {
@@ -239,21 +251,75 @@ export default function ProductDetailsClient({ product }: { product: Product }) 
 
         {/* 2-Column Product Layout */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
-          
-          {/* Left Column: Image Container */}
-          <div className="glass-panel p-8 rounded-3xl flex items-center justify-center min-h-[320px] md:min-h-[420px] text-[10rem] select-none shadow-2xl relative group overflow-hidden border border-zinc-800/80">
-            <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/5 to-violet-500/5 pointer-events-none"></div>
-            {clientProduct.image.startsWith("http") || clientProduct.image.startsWith("data:image") ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img 
-                src={clientProduct.image} 
-                alt={clientProduct.name} 
-                className="max-h-[300px] object-contain rounded-xl drop-shadow-2xl group-hover:scale-102 transition-transform duration-300"
-              />
-            ) : (
-              <span className="drop-shadow-2xl group-hover:scale-105 transition-transform duration-300">
-                {clientProduct.image}
-              </span>
+              {/* Left Column: Image Container with Smooth Slider & Thumbnails */}
+          <div className="flex flex-col gap-4">
+            <div className="glass-panel p-8 rounded-3xl flex items-center justify-center min-h-[320px] md:min-h-[420px] shadow-2xl relative group overflow-hidden border border-zinc-800/80">
+              <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/5 to-violet-500/5 pointer-events-none"></div>
+              
+              {/* Sliding viewport */}
+              <div className="w-full h-[300px] overflow-hidden relative flex items-center justify-center">
+                <div
+                  className="flex transition-transform duration-500 ease-in-out w-full h-full"
+                  style={{ transform: `translateX(-${activeImageIndex * 100}%)` }}
+                >
+                  {(product.images && product.images.length > 0 ? product.images : ["📦"]).map((imgUrl, idx) => (
+                    <div key={idx} className="w-full h-full shrink-0 flex items-center justify-center select-none text-[10rem]">
+                      {imgUrl.startsWith("http") || imgUrl.startsWith("data:image") ? (
+                        <img 
+                          src={imgUrl} 
+                          alt={`${product.name} - view ${idx + 1}`} 
+                          className="max-h-[300px] object-contain rounded-xl drop-shadow-2xl group-hover:scale-102 transition-transform duration-300"
+                        />
+                      ) : (
+                        <span className="drop-shadow-2xl group-hover:scale-105 transition-transform duration-300">
+                          {imgUrl}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Slider Controls */}
+              {product.images && product.images.length > 1 && (
+                <>
+                  <button
+                    onClick={() => setActiveImageIndex((prev) => (prev === 0 ? product.images.length - 1 : prev - 1))}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-zinc-950/70 border border-zinc-800/60 hover:border-indigo-500 text-white flex items-center justify-center font-extrabold hover:bg-zinc-900 transition-all cursor-pointer select-none opacity-0 group-hover:opacity-100"
+                  >
+                    ←
+                  </button>
+                  <button
+                    onClick={() => setActiveImageIndex((prev) => (prev === product.images.length - 1 ? 0 : prev + 1))}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-zinc-950/70 border border-zinc-800/60 hover:border-indigo-500 text-white flex items-center justify-center font-extrabold hover:bg-zinc-900 transition-all cursor-pointer select-none opacity-0 group-hover:opacity-100"
+                  >
+                    →
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Jumping Thumbnails Panel */}
+            {product.images && product.images.length > 1 && (
+              <div className="flex justify-center gap-3 py-1 flex-wrap">
+                {product.images.map((imgUrl, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveImageIndex(idx)}
+                    className={`w-14 h-14 rounded-xl bg-zinc-950 border overflow-hidden transition-all duration-200 cursor-pointer p-1 shrink-0 ${
+                      activeImageIndex === idx
+                        ? "border-indigo-500 ring-2 ring-indigo-500/20 scale-105"
+                        : "border-zinc-850 opacity-60 hover:opacity-100"
+                    }`}
+                  >
+                    {imgUrl.startsWith("http") || imgUrl.startsWith("data:image") ? (
+                      <img src={imgUrl} alt="Thumbnail preview" className="w-full h-full object-cover rounded-md" />
+                    ) : (
+                      <span className="text-xl flex items-center justify-center h-full">{imgUrl}</span>
+                    )}
+                  </button>
+                ))}
+              </div>
             )}
           </div>
 
@@ -358,6 +424,44 @@ export default function ProductDetailsClient({ product }: { product: Product }) 
             <h2 className="text-2xl font-black text-white">Customer Reviews</h2>
             <p className="text-xs text-zinc-500">Read verified buyer insights and community impressions.</p>
           </div>
+
+          {reviewsCount > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+              <div className="glass-panel p-6 rounded-2xl border border-zinc-900 shadow-xl flex flex-col justify-center items-center text-center">
+                <span className="text-5xl font-black text-white">{averageRating}</span>
+                <div className="flex gap-0.5 mt-2">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <span key={i} className={`text-sm ${i < Math.round(averageRating) ? "text-amber-400" : "text-zinc-800"}`}>
+                      ★
+                    </span>
+                  ))}
+                </div>
+                <span className="text-xs text-zinc-500 mt-2">{reviewsCount} {reviewsCount === 1 ? 'rating' : 'ratings'} total</span>
+              </div>
+              <div className="md:col-span-2 glass-panel p-6 rounded-2xl border border-zinc-900 shadow-xl flex flex-col justify-center">
+                <div className="space-y-2">
+                  {[5, 4, 3, 2, 1].map((stars) => {
+                    const count = starCounts[stars as 1 | 2 | 3 | 4 | 5] || 0;
+                    const percentage = reviewsCount > 0 ? (count / reviewsCount) * 100 : 0;
+                    return (
+                      <div key={stars} className="flex items-center gap-3 text-xs">
+                        <span className="w-12 text-zinc-400 font-semibold flex items-center gap-0.5 justify-end select-none">
+                          {stars} <span className="text-amber-400 text-[10px]">★</span>
+                        </span>
+                        <div className="flex-1 h-2 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800/80">
+                          <div
+                            className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full transition-all duration-500"
+                            style={{ width: `${percentage}%` }}
+                          ></div>
+                        </div>
+                        <span className="w-8 text-zinc-500 text-right font-medium">{count}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
 
           {!product.reviews || product.reviews.length === 0 ? (
             <div className="glass-panel p-10 rounded-2xl text-center border border-zinc-900 shadow-xl">

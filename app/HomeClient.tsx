@@ -16,6 +16,7 @@ interface Product {
   image: string;
   rating: number;
   stock: number;
+  reviewsCount?: number;
 }
 
 interface Message {
@@ -304,7 +305,7 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
                       <img
                         src={product.image}
                         alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
                       product.image
@@ -340,6 +341,9 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
                           <>
                             <span className="text-xs text-amber-400">★</span>
                             <span className="text-xs text-zinc-300 font-semibold">{product.rating}</span>
+                            {product.reviewsCount !== undefined && product.reviewsCount > 0 && (
+                              <span className="text-xs text-zinc-500">({product.reviewsCount})</span>
+                            )}
                           </>
                         ) : (
                           <span className="text-[10px] text-zinc-500 font-bold">No reviews yet</span>
