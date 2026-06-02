@@ -5,6 +5,8 @@ import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import { uploadImage } from "@/lib/cloudinary";
 import { createNotification } from "./notifications";
+import { sendOrderStatusUpdateEmail } from "@/lib/mail";
+
 import { z } from "zod";
 
 const productSchema = z.object({
@@ -355,6 +357,13 @@ export async function updateOrderStatus(orderId: string, status: any) {
         );
       } catch (notiErr) {
         console.error("Failed to trigger status update notification:", notiErr);
+      }
+
+      // Send order status update email to the customer
+      try {
+        await sendOrderStatusUpdateEmail(orderId, status);
+      } catch (mailErr) {
+        console.error("Failed to send status update email:", mailErr);
       }
     }
 

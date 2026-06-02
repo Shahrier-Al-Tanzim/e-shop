@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import prisma from "@/lib/prisma";
 import { createNotification } from "@/app/actions/notifications";
+import { sendOrderPlacedEmails, sendOrderStatusUpdateEmail } from "@/lib/mail";
+
 
 export async function POST(req: Request) {
   let body = "";
@@ -95,6 +97,14 @@ export async function POST(req: Request) {
             }
           } catch (notiErr) {
             console.error("Failed to trigger Stripe notifications:", notiErr);
+          }
+
+          // Trigger email updates for customer and admins
+          try {
+            await sendOrderPlacedEmails(completedOrder.id);
+            await sendOrderStatusUpdateEmail(completedOrder.id, "PAID");
+          } catch (mailErr) {
+            console.error("Failed to dispatch Stripe payment emails:", mailErr);
           }
         }
       } catch (dbError: any) {
