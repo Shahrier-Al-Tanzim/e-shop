@@ -5,6 +5,8 @@ import prisma from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import { headers } from "next/headers";
 import { createNotification } from "./notifications";
+import { sendOrderPlacedEmails } from "@/lib/mail";
+
 
 interface CartItemInput {
   id: string;
@@ -105,6 +107,13 @@ export async function createCodOrder(
       );
     } catch (notiErr) {
       console.error("Failed to trigger COD notifications:", notiErr);
+    }
+
+    // Trigger customer and admin email notifications
+    try {
+      await sendOrderPlacedEmails(order.id);
+    } catch (mailErr) {
+      console.error("Failed to send COD order emails:", mailErr);
     }
 
     return { success: true, orderId: order.id };
