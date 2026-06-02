@@ -165,14 +165,7 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
             </span>
           </div>
 
-          <div className="hidden md:flex items-center gap-6 text-sm text-zinc-400 font-medium">
-            <a href="#store" className="hover:text-indigo-400 transition-colors">Catalog</a>
-            <span className="text-zinc-700">|</span>
-            <span className="bg-gradient-to-r from-emerald-500 to-teal-400 bg-clip-text text-transparent flex items-center gap-1.5 text-xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-              Vercel Ready
-            </span>
-          </div>
+
 
           <div className="flex items-center gap-4">
             <button
@@ -252,7 +245,7 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
             <span className="premium-gradient-text">E shop</span>
           </p>
           <p className="text-zinc-400 text-xs sm:text-sm mb-5 max-w-lg leading-relaxed">
-            A premium template designed for extreme performance, security, and edge deployments. Scalable to millions of views with Neon serverless PostgreSQL, Stripe Checkout, and a fully cognitive AI Support Assistant.
+            A premium e-commerce website for buying and selling products
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <a

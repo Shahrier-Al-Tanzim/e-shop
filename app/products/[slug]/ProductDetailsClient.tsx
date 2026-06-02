@@ -195,12 +195,6 @@ export default function ProductDetailsClient({ product }: { product: Product }) 
 
           <div className="hidden md:flex items-center gap-6 text-sm text-zinc-400 font-medium">
             <Link href="/#roadmap" className="hover:text-indigo-400 transition-colors">Roadmap</Link>
-            <Link href="/#store" className="hover:text-indigo-400 transition-colors">Catalog</Link>
-            <span className="text-zinc-700">|</span>
-            <span className="bg-gradient-to-r from-emerald-500 to-teal-400 bg-clip-text text-transparent flex items-center gap-1.5 text-xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-              Vercel Ready
-            </span>
           </div>
 
           <div className="flex items-center gap-4">
