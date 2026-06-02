@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import { uploadImage } from "@/lib/cloudinary";
+import { createNotification } from "./notifications";
 import { z } from "zod";
 
 const productSchema = z.object({
@@ -338,10 +339,24 @@ export async function updateOrderStatus(orderId: string, status: any) {
   try {
     await verifyAdmin();
 
-    await prisma.order.update({
+    const updatedOrder = await prisma.order.update({
       where: { id: orderId },
       data: { status },
+      select: { userId: true, total: true },
     });
+
+    if (updatedOrder && updatedOrder.userId) {
+      try {
+        await createNotification(
+          "Order Status Updated",
+          `Your order #${orderId.substring(0, 8)} totaling $${updatedOrder.total.toFixed(2)} is now ${status}.`,
+          updatedOrder.userId,
+          false
+        );
+      } catch (notiErr) {
+        console.error("Failed to trigger status update notification:", notiErr);
+      }
+    }
 
     revalidatePath("/admin/orders");
     revalidatePath("/admin");

@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import prisma from "@/lib/prisma";
 
 export const metadata = {
   title: "Admin Dashboard | E Shop Console",
@@ -19,6 +20,10 @@ export default async function AdminLayout({
   if (!session || session.user?.role !== "ADMIN") {
     redirect("/login");
   }
+
+  const unreadCount = await prisma.notification.count({
+    where: { isRead: false, isAdmin: true },
+  });
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-50 flex flex-col font-sans relative">
@@ -86,9 +91,30 @@ export default async function AdminLayout({
             
             <Link 
               href="/admin/orders" 
-              className="flex items-center gap-3 text-sm px-4 py-3 rounded-xl hover:bg-zinc-800/50 hover:text-indigo-400 text-zinc-300 transition-all font-semibold"
+              className="flex items-center justify-between text-sm px-4 py-3 rounded-xl hover:bg-zinc-800/50 hover:text-indigo-400 text-zinc-300 transition-all font-semibold"
             >
-              <span>💳</span> Customer Orders
+              <div className="flex items-center gap-3">
+                <span>💳</span> Customer Orders
+              </div>
+              {unreadCount > 0 && (
+                <span className="bg-red-500 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full leading-none">
+                  {unreadCount}
+                </span>
+              )}
+            </Link>
+
+            <Link 
+              href="/admin/notifications" 
+              className="flex items-center justify-between text-sm px-4 py-3 rounded-xl hover:bg-zinc-800/50 hover:text-indigo-400 text-zinc-300 transition-all font-semibold"
+            >
+              <div className="flex items-center gap-3">
+                <span>🔔</span> Notifications
+              </div>
+              {unreadCount > 0 && (
+                <span className="bg-red-500 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full leading-none">
+                  {unreadCount}
+                </span>
+              )}
             </Link>
           </div>
 

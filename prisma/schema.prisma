@@ -30,17 +30,18 @@ enum PaymentMethod {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  name      String?
-  email     String   @unique
-  password  String? // Nullable to support Google OAuth alongside Credentials login
-  role      Role     @default(CUSTOMER)
-  address   String?
-  phone     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  orders    Order[]
-  reviews   Review[]
+  id            String         @id @default(uuid())
+  name          String?
+  email         String         @unique
+  password      String? // Nullable to support Google OAuth alongside Credentials login
+  role          Role           @default(CUSTOMER)
+  address       String?
+  phone         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  orders        Order[]
+  reviews       Review[]
+  notifications Notification[]
 }
 
 model Category {
@@ -104,4 +105,16 @@ model Review {
 
   @@unique([userId, productId]) // Enforce one review per user per product
 }
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String?  // Target user (null for all admin broadcasts or if not registered)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  isAdmin   Boolean  @default(false) // Targeted for administrator group
+  createdAt DateTime @default(now())
+}
+
 

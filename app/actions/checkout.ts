@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import { headers } from "next/headers";
+import { createNotification } from "./notifications";
 
 interface CartItemInput {
   id: string;
@@ -87,6 +88,24 @@ export async function createCodOrder(
 
       return newOrder;
     });
+
+    // Create notifications for COD orders
+    try {
+      await createNotification(
+        "New COD Order Placed",
+        `Order #${order.id.substring(0, 8)} totaling $${order.total.toFixed(2)} has been placed using Cash on Delivery.`,
+        null,
+        true
+      );
+      await createNotification(
+        "Order Placed Successfully",
+        `Your Cash on Delivery order #${order.id.substring(0, 8)} totaling $${order.total.toFixed(2)} was successfully placed.`,
+        session.user.id,
+        false
+      );
+    } catch (notiErr) {
+      console.error("Failed to trigger COD notifications:", notiErr);
+    }
 
     return { success: true, orderId: order.id };
   } catch (error: any) {

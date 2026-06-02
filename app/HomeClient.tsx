@@ -48,9 +48,32 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
 
   // Hydration Mount Safety Safeguard
   const [isMounted, setIsMounted] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    const fetchUnreadCount = async () => {
+      try {
+        const { getUnreadCount } = await import("@/app/actions/notifications");
+        const isAdmin = session?.user?.role === "ADMIN";
+        const res = await getUnreadCount(isAdmin);
+        if (res.success && res.count !== undefined) {
+          setUnreadNotifications(res.count);
+        }
+      } catch (err) {
+        console.error("Failed to fetch notification count:", err);
+      }
+    };
+
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 15000);
+    return () => clearInterval(interval);
+  }, [isLoggedIn, session]);
 
   // Hook E Shop store selectors and triggers
   const addItem = useCartStore((state) => state.addItem);
@@ -175,19 +198,29 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
                   )}
                 </span>
 
-                {session?.user?.role === "ADMIN" ? (
+                 {session?.user?.role === "ADMIN" ? (
                   <Link
                     href="/admin"
-                    className="inline-flex text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-2 rounded-lg transition-colors border border-indigo-500/30 cursor-pointer"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-2 rounded-lg transition-colors border border-indigo-500/30 cursor-pointer"
                   >
-                    Admin Panel
+                    <span>Admin Panel</span>
+                    {isMounted && unreadNotifications > 0 && (
+                      <span className="bg-red-500 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full animate-pulse leading-none">
+                        {unreadNotifications}
+                      </span>
+                    )}
                   </Link>
                 ) : (
                   <Link
                     href="/profile"
-                    className="inline-flex text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 text-zinc-300 px-3.5 py-2 rounded-lg border border-zinc-800 transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 text-zinc-300 px-3.5 py-2 rounded-lg border border-zinc-800 transition-colors cursor-pointer"
                   >
-                    Profile & Orders
+                    <span>Profile & Orders</span>
+                    {isMounted && unreadNotifications > 0 && (
+                      <span className="bg-red-500 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full leading-none">
+                        {unreadNotifications}
+                      </span>
+                    )}
                   </Link>
                 )}
 

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import prisma from "@/lib/prisma";
+import { createNotification } from "@/app/actions/notifications";
 
 export async function POST(req: Request) {
   let body = "";
@@ -35,7 +36,7 @@ export async function POST(req: Request) {
       console.log(`Processing successful Stripe payment webhook for order: ${orderId}`);
 
       try {
-        await prisma.$transaction(async (tx) => {
+        const completedOrder = await prisma.$transaction(async (tx) => {
           // 1. Fetch the Order details
           const order = await tx.order.findUnique({
             where: { id: orderId },
@@ -73,7 +74,29 @@ export async function POST(req: Request) {
           }
 
           console.log(`Order ${orderId} successfully completed and stock decremented.`);
+          return order;
         });
+
+        if (completedOrder) {
+          try {
+            await createNotification(
+              "New Stripe Payment Received",
+              `Order #${completedOrder.id.substring(0, 8)} totaling $${completedOrder.total.toFixed(2)} has been paid successfully via Stripe.`,
+              null,
+              true
+            );
+            if (completedOrder.userId) {
+              await createNotification(
+                "Payment Received Successfully",
+                `Your payment for order #${completedOrder.id.substring(0, 8)} totaling $${completedOrder.total.toFixed(2)} has been verified.`,
+                completedOrder.userId,
+                false
+              );
+            }
+          } catch (notiErr) {
+            console.error("Failed to trigger Stripe notifications:", notiErr);
+          }
+        }
       } catch (dbError: any) {
         console.error(`Database transaction error inside webhook: ${dbError.message}`);
         return NextResponse.json(
