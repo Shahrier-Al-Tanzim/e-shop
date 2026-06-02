@@ -109,12 +109,10 @@ export async function createCodOrder(
       console.error("Failed to trigger COD notifications:", notiErr);
     }
 
-    // Trigger customer and admin email notifications
-    try {
-      await sendOrderPlacedEmails(order.id);
-    } catch (mailErr) {
-      console.error("Failed to send COD order emails:", mailErr);
-    }
+    // Trigger customer and admin email notifications (Non-blocking background execution)
+    sendOrderPlacedEmails(order.id).catch((mailErr) =>
+      console.error("Failed to send COD order emails:", mailErr)
+    );
 
     return { success: true, orderId: order.id };
   } catch (error: any) {

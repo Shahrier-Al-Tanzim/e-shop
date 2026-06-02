@@ -223,9 +223,18 @@ export async function sendOrderPlacedEmails(orderId: string) {
       )
       .join("");
 
+    let statusBadgeClass = "badge-pending";
+    switch (order.status) {
+      case "PAID": statusBadgeClass = "badge-paid"; break;
+      case "PROCESSING": statusBadgeClass = "badge-processing"; break;
+      case "SHIPPED": statusBadgeClass = "badge-shipped"; break;
+      case "DELIVERED": statusBadgeClass = "badge-delivered"; break;
+      case "CANCELLED": statusBadgeClass = "badge-cancelled"; break;
+    }
+
     const customerContent = `
       <h1>Thank you for your order, ${customerName}!</h1>
-      <p>Your order <strong>#${order.id}</strong> has been successfully received and is currently in status <span class="badge badge-pending">PENDING</span>.</p>
+      <p>Your order <strong>#${order.id}</strong> has been successfully received and is currently in status <span class="badge ${statusBadgeClass}">${order.status}</span>.</p>
       
       <div class="table-container">
         <table>

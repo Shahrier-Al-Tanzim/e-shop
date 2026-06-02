@@ -359,12 +359,10 @@ export async function updateOrderStatus(orderId: string, status: any) {
         console.error("Failed to trigger status update notification:", notiErr);
       }
 
-      // Send order status update email to the customer
-      try {
-        await sendOrderStatusUpdateEmail(orderId, status);
-      } catch (mailErr) {
-        console.error("Failed to send status update email:", mailErr);
-      }
+      // Send order status update email to the customer (Non-blocking background execution)
+      sendOrderStatusUpdateEmail(orderId, status).catch((mailErr) =>
+        console.error("Failed to send status update email:", mailErr)
+      );
     }
 
     revalidatePath("/admin/orders");

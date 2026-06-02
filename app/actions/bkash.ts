@@ -177,7 +177,8 @@ export async function executeBkashPayment(paymentId: string) {
     });
 
     const data = await res.json();
-    if (data.statusCode && data.statusCode !== "0000") {
+    // Status code "2062" means the payment has already been completed successfully. We treat this as success.
+    if (data.statusCode && data.statusCode !== "0000" && data.statusCode !== "2062") {
       throw new Error(data.statusMessage || `bKash Execute Error: ${data.statusCode}`);
     }
 

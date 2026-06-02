@@ -74,7 +74,7 @@ export default async function SuccessPage({ searchParams }: PageProps) {
             <div className="space-y-1">
               <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-550 block">Fulfillment Channel</span>
               <span className="text-xs font-extrabold text-indigo-400">
-                {order.paymentMethod === "STRIPE" ? "💳 Secured Credit Card (PAID)" : "📝 Cash on Delivery (COD)"}
+                {order.paymentMethod === "STRIPE" ? "💳 Secured Credit Card (PAID)" : order.paymentMethod === "BKASH" ? "📢 bKash Wallet (PAID)" : "📝 Cash on Delivery (COD)"}
               </span>
             </div>
             <div className="space-y-1 sm:col-span-2 pt-2 border-t border-zinc-900">
