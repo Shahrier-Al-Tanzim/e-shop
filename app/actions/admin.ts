@@ -89,10 +89,37 @@ export async function createProduct(prevState: any, formData: FormData) {
       return { error: validationResult.error.issues[0].message };
     }
 
-    // Process image upload
-    let finalImageUrl = "📦"; // Default placeholder emoji
-    if (imageInput) {
-      finalImageUrl = await uploadImage(imageInput);
+    // Process image upload (which could be single image, array, base64 list, or emoji)
+    const imagesJson = formData.get("images") as string;
+    let finalImages: string[] = [];
+
+    if (imagesJson) {
+      try {
+        const parsedImages = JSON.parse(imagesJson) as string[];
+        for (const img of parsedImages) {
+          if (img && (img.startsWith("data:image") || img.startsWith("http"))) {
+            const uploadedUrl = await uploadImage(img);
+            finalImages.push(uploadedUrl);
+          } else if (img) {
+            finalImages.push(img); // Fallback emoji or raw text
+          }
+        }
+      } catch {
+        // Fallback to legacy single image if JSON parse fails
+      }
+    }
+
+    if (finalImages.length === 0 && imageInput) {
+      if (imageInput.startsWith("data:image") || imageInput.startsWith("http")) {
+        const uploadedUrl = await uploadImage(imageInput);
+        finalImages.push(uploadedUrl);
+      } else {
+        finalImages.push(imageInput);
+      }
+    }
+
+    if (finalImages.length === 0) {
+      finalImages = ["📦"];
     }
 
     const slug = await generateUniqueSlug(name);
@@ -104,7 +131,7 @@ export async function createProduct(prevState: any, formData: FormData) {
         description,
         price,
         stock,
-        images: [finalImageUrl],
+        images: finalImages,
         categoryId,
         isActive,
       },
@@ -131,7 +158,7 @@ export async function updateProduct(id: string, prevState: any, formData: FormDa
     const categoryId = formData.get("categoryId") as string;
     const isActive = formData.get("isActive") === "true";
     const imageInput = formData.get("image") as string;
-    const existingImagesJson = formData.get("existingImages") as string;
+    const imagesJson = formData.get("images") as string;
 
     if (!name || !description || !priceStr || !stockStr || !categoryId) {
       return { error: "All fields except image are required!" };
@@ -154,18 +181,30 @@ export async function updateProduct(id: string, prevState: any, formData: FormDa
     }
 
     let finalImages: string[] = [];
-    if (existingImagesJson) {
+
+    if (imagesJson) {
       try {
-        finalImages = JSON.parse(existingImagesJson);
+        const parsedImages = JSON.parse(imagesJson) as string[];
+        for (const img of parsedImages) {
+          if (img && (img.startsWith("data:image") || img.startsWith("http"))) {
+            const uploadedUrl = await uploadImage(img);
+            finalImages.push(uploadedUrl);
+          } else if (img) {
+            finalImages.push(img);
+          }
+        }
       } catch {
         finalImages = [];
       }
     }
 
-    // If new image supplied, upload and prepend/replace
-    if (imageInput) {
-      const uploadedUrl = await uploadImage(imageInput);
-      finalImages = [uploadedUrl];
+    if (finalImages.length === 0 && imageInput) {
+      if (imageInput.startsWith("data:image") || imageInput.startsWith("http")) {
+        const uploadedUrl = await uploadImage(imageInput);
+        finalImages.push(uploadedUrl);
+      } else {
+        finalImages.push(imageInput);
+      }
     }
 
     if (finalImages.length === 0) {

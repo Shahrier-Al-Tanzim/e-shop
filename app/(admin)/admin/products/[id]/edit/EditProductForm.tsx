@@ -37,24 +37,29 @@ export default function EditProductForm({ product, categories }: Props) {
   const [stock, setStock] = useState(product.stock.toString());
   const [description, setDescription] = useState(product.description);
   const [categoryId, setCategoryId] = useState(product.categoryId);
-  const [image, setImage] = useState(product.images[0] || "");
+  const [images, setImages] = useState<string[]>(product.images || []);
   const [useUpload, setUseUpload] = useState(
-    !product.images[0] || product.images[0].startsWith("data:image") || product.images[0].startsWith("http")
+    product.images && (product.images.length === 0 || product.images[0].startsWith("data:image") || product.images[0].startsWith("http"))
   );
   const [isActive, setIsActive] = useState(product.isActive);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 20 * 1024 * 1024) {
-        setError("File size is too large! Maximum limit is 20MB.");
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    const files = e.target.files;
+    if (files) {
+      const remainingSlots = 5 - images.length;
+      const filesToProcess = Array.from(files).slice(0, remainingSlots);
+
+      filesToProcess.forEach((file) => {
+        if (file.size > 20 * 1024 * 1024) {
+          setError("File size is too large! Maximum limit is 20MB per image.");
+          return;
+        }
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImages((prev) => [...prev, reader.result as string].slice(0, 5));
+        };
+        reader.readAsDataURL(file);
+      });
     }
   };
 
@@ -96,9 +101,8 @@ export default function EditProductForm({ product, categories }: Props) {
     formData.append("stock", stock);
     formData.append("description", description);
     formData.append("categoryId", categoryId);
-    formData.append("image", image);
+    formData.append("images", JSON.stringify(images));
     formData.append("isActive", isActive ? "true" : "false");
-    formData.append("existingImages", JSON.stringify(product.images));
 
     startTransition(async () => {
       const res = await updateProduct(product.id, null, formData);
@@ -195,62 +199,76 @@ export default function EditProductForm({ product, categories }: Props) {
         </div>
 
         {/* Image / Emoji */}
-        <div className="flex flex-col justify-end">
+        <div className="sm:col-span-2">
           <label className="block text-[10px] uppercase font-bold tracking-widest text-zinc-500 mb-2">
-            {useUpload ? "Thumbnail Image Photo *" : "Thumbnail Image Emoji / URL *"}
+            {useUpload ? `Product Images (${images.length}/5) *` : "Product Image Emoji / URL *"}
           </label>
           
           {useUpload ? (
-            <div className="w-full bg-zinc-950 border-2 border-dashed border-zinc-800 rounded-xl p-4 flex flex-col items-center justify-center text-center hover:border-indigo-500/40 transition-colors cursor-pointer relative min-h-[92px]">
-              {image && (image.startsWith("data:image") || image.startsWith("http")) ? (
-                <div className="relative group w-full flex items-center justify-center overflow-hidden py-1">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={image} alt="Uploaded product preview" className="max-h-[72px] rounded-lg object-contain" />
-                  <button
-                    type="button"
-                    onClick={() => setImage("")}
-                    className="absolute top-0 right-0 bg-red-950/80 hover:bg-red-900 border border-red-900/60 text-red-400 text-[8px] font-bold px-1.5 py-0.5 rounded cursor-pointer transition-colors"
-                  >
-                    ✕ Remove
-                  </button>
+            <div className="space-y-4">
+              {images.length < 5 && (
+                <div className="w-full bg-zinc-950 border-2 border-dashed border-zinc-800 rounded-xl p-6 flex flex-col items-center justify-center text-center hover:border-indigo-500/40 transition-colors cursor-pointer relative min-h-[100px]">
+                  <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer">
+                    <span className="text-2xl mb-1">📷</span>
+                    <span className="text-xs font-bold text-zinc-300">Choose Product Photo(s)</span>
+                    <span className="text-[10px] text-zinc-500 mt-1">Select up to 5 images (WEBP, PNG, JPG under 20MB)</span>
+                    <input
+                      type="file"
+                      accept=".png,.jpg,.jpeg,.webp"
+                      multiple
+                      onChange={handleFileChange}
+                      disabled={isPending}
+                      className="hidden"
+                    />
+                  </label>
                 </div>
-              ) : (
-                <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer py-1">
-                  <span className="text-xl mb-0.5">📷</span>
-                  <span className="text-[11px] font-bold text-zinc-300">Choose Product Photo</span>
-                  <span className="text-[9px] text-zinc-500 mt-0.5">PNG, JPG, JPEG, or WEBP up to 20MB</span>
-                  <input
-                    type="file"
-                    accept=".png,.jpg,.jpeg,.webp"
-                    onChange={handleFileChange}
-                    disabled={isPending}
-                    className="hidden"
-                  />
-                </label>
+              )}
+
+              {images.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                  {images.map((img, idx) => (
+                    <div key={idx} className="relative group rounded-xl border border-zinc-800 overflow-hidden bg-zinc-950 aspect-square flex items-center justify-center">
+                      {img.startsWith("data:image") || img.startsWith("http") ? (
+                        <img src={img} alt="Product preview" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-3xl">{img}</span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setImages((prev) => prev.filter((_, i) => i !== idx))}
+                        className="absolute top-2 right-2 bg-red-950/80 hover:bg-red-900 border border-red-900/60 text-red-400 text-[10px] font-bold p-1 rounded-full cursor-pointer transition-colors w-6 h-6 flex items-center justify-center"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           ) : (
-            <input
-              id="edit-image"
-              type="text"
-              required
-              value={image}
-              onChange={(e) => setImage(e.target.value)}
-              placeholder="e.g. ⌚ or standard URL link"
-              disabled={isPending}
-              className="w-full bg-zinc-950 border border-zinc-800 text-sm rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors disabled:opacity-50"
-            />
+            <div className="space-y-4">
+              <input
+                id="edit-image"
+                type="text"
+                required
+                value={images[0] || ""}
+                onChange={(e) => setImages([e.target.value])}
+                placeholder="e.g. ⌚ or standard URL link"
+                disabled={isPending}
+                className="w-full bg-zinc-950 border border-zinc-800 text-sm rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors disabled:opacity-50"
+              />
+            </div>
           )}
 
           <button
             type="button"
             onClick={() => {
               setUseUpload(!useUpload);
-              setImage(useUpload ? "📦" : "");
+              setImages(useUpload ? ["📦"] : []);
             }}
-            className="text-[9px] text-indigo-400 hover:text-indigo-300 font-bold mt-2 hover:underline self-start cursor-pointer"
+            className="text-[9px] text-indigo-400 hover:text-indigo-300 font-bold mt-2.5 hover:underline self-start cursor-pointer"
           >
-            {useUpload ? "Or use emoji/direct URL link instead" : "Or upload a product photo instead"}
+            {useUpload ? "Or use emoji/direct URL link instead" : "Or upload product photos instead"}
           </button>
         </div>
 
